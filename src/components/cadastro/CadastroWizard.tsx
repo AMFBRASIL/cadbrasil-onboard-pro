@@ -1,0 +1,892 @@
+import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  ShieldCheck,
+  Lock,
+  FileCheck2,
+  HeadphonesIcon,
+  Building2,
+  UserRound,
+  MapPin,
+  ClipboardList,
+  FileUp,
+  CreditCard,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  Loader2,
+  CloudUpload,
+  Trash2,
+  Save,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Landmark,
+  BadgeCheck,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type StepKey =
+  | "empresa"
+  | "responsavel"
+  | "endereco"
+  | "diagnostico"
+  | "documentos"
+  | "plano"
+  | "revisao";
+
+interface StepDef {
+  key: StepKey;
+  num: number;
+  title: string;
+  short: string;
+  icon: typeof Building2;
+}
+
+const STEPS: StepDef[] = [
+  { key: "empresa", num: 1, title: "Identificação da Empresa", short: "Empresa", icon: Building2 },
+  { key: "responsavel", num: 2, title: "Responsável Legal", short: "Responsável", icon: UserRound },
+  { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
+  { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
+  { key: "documentos", num: 5, title: "Envio de Documentos", short: "Documentos", icon: FileUp },
+  { key: "plano", num: 6, title: "Plano de Acesso", short: "Plano", icon: CreditCard },
+  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+];
+
+interface FormState {
+  cnpj: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  situacao: string;
+  abertura: string;
+  porte: string;
+  empresaOk: boolean;
+
+  nome: string;
+  cpf: string;
+  nascimento: string;
+  telefone: string;
+  whatsapp: string;
+  email: string;
+  cargo: string;
+
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento: string;
+  cidade: string;
+  estado: string;
+
+  documentos: Record<string, { name: string; size: number; status: "uploading" | "recebido" | "analise" | "aprovado"; progress: number }>;
+
+  declaracao: boolean;
+}
+
+const INITIAL: FormState = {
+  cnpj: "",
+  razaoSocial: "",
+  nomeFantasia: "",
+  situacao: "",
+  abertura: "",
+  porte: "",
+  empresaOk: false,
+  nome: "",
+  cpf: "",
+  nascimento: "",
+  telefone: "",
+  whatsapp: "",
+  email: "",
+  cargo: "",
+  cep: "",
+  rua: "",
+  numero: "",
+  complemento: "",
+  cidade: "",
+  estado: "",
+  documentos: {},
+  declaracao: false,
+};
+
+function maskCNPJ(v: string) {
+  return v.replace(/\D/g, "").slice(0, 14)
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+function maskCPF(v: string) {
+  return v.replace(/\D/g, "").slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+function maskPhone(v: string) {
+  return v.replace(/\D/g, "").slice(0, 11)
+    .replace(/^(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
+}
+function maskCEP(v: string) {
+  return v.replace(/\D/g, "").slice(0, 8).replace(/^(\d{5})(\d)/, "$1-$2");
+}
+function isValidEmail(e: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+function isValidCPF(cpf: string) {
+  return cpf.replace(/\D/g, "").length === 11;
+}
+
+export function CadastroWizard() {
+  const [current, setCurrent] = useState(0);
+  const [data, setData] = useState<FormState>(INITIAL);
+  const [savedAgo, setSavedAgo] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+
+  // autosave indicator
+  useEffect(() => {
+    setSavedAgo(0);
+    const i = setInterval(() => setSavedAgo((s) => s + 1), 1000);
+    return () => clearInterval(i);
+  }, [data, current]);
+
+  const progress = useMemo(() => Math.round(((current + 1) / STEPS.length) * 100), [current]);
+
+  const update = useCallback(<K extends keyof FormState>(k: K, v: FormState[K]) => {
+    setData((d) => ({ ...d, [k]: v }));
+  }, []);
+
+  const next = () => setCurrent((c) => Math.min(STEPS.length - 1, c + 1));
+  const prev = () => setCurrent((c) => Math.max(0, c - 1));
+
+  if (submitted) return <SuccessScreen />;
+
+  return (
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased">
+      <TopBar />
+      <Header />
+
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+          <aside className="hidden lg:block">
+            <Timeline current={current} onJump={(i) => i <= current && setCurrent(i)} />
+          </aside>
+
+          <section>
+            <ProgressHeader current={current} progress={progress} />
+
+            <div className="mt-6 rounded-xl border border-border bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,40,80,0.12)]">
+              <div className="border-b border-border bg-primary-soft/40 px-6 py-5 rounded-t-xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    {(() => {
+                      const Icon = STEPS[current].icon;
+                      return <Icon className="h-5 w-5" />;
+                    })()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                      {STEPS[current].title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {stepSubtitle(STEPS[current].key)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-7">
+                <div key={current} className="animate-fade-in">
+                  {current === 0 && <StepEmpresa data={data} update={update} />}
+                  {current === 1 && <StepResponsavel data={data} update={update} />}
+                  {current === 2 && <StepEndereco data={data} update={update} />}
+                  {current === 3 && <StepDiagnostico data={data} />}
+                  {current === 4 && <StepDocumentos data={data} update={update} />}
+                  {current === 5 && <StepPlano />}
+                  {current === 6 && <StepRevisao data={data} update={update} />}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/40 px-6 py-4 rounded-b-xl">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Save className="h-3.5 w-3.5 text-success" />
+                  Último salvamento há {savedAgo}s — rascunho protegido
+                </div>
+                <div className="flex items-center gap-2">
+                  {current > 0 && (
+                    <Button variant="outline" onClick={prev} className="gap-2">
+                      <ArrowLeft className="h-4 w-4" /> Voltar
+                    </Button>
+                  )}
+                  {current < STEPS.length - 1 ? (
+                    <Button onClick={next} className="gap-2 bg-primary hover:bg-primary-deep">
+                      Avançar etapa <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setSubmitted(true)}
+                      disabled={!data.declaracao}
+                      className="gap-2 bg-success text-success-foreground hover:opacity-90 disabled:opacity-50"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> Finalizar Credenciamento
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <InstitutionalFooter />
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function stepSubtitle(k: StepKey) {
+  switch (k) {
+    case "empresa": return "Informe o CNPJ para consultarmos automaticamente os dados oficiais da Receita Federal.";
+    case "responsavel": return "Dados do representante legal responsável pelo credenciamento da empresa.";
+    case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
+    case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
+    case "documentos": return "Envio seguro e criptografado dos documentos comprobatórios.";
+    case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
+    case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
+  }
+}
+
+/* ---------------- TOP / HEADER ---------------- */
+
+function TopBar() {
+  return (
+    <div className="border-b border-border bg-primary-deep text-primary-foreground">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs lg:px-8">
+        <div className="flex items-center gap-2">
+          <Landmark className="h-3.5 w-3.5" />
+          <span>Plataforma oficial de credenciamento de fornecedores</span>
+        </div>
+        <div className="hidden items-center gap-4 sm:flex">
+          <span>Ouvidoria</span>
+          <span>Acessibilidade</span>
+          <span>Alto contraste</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Header() {
+  return (
+    <header className="border-b border-border bg-card">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div className="flex items-center gap-4">
+          <Logo />
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+              CADBRASIL
+            </p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">
+              Credenciamento Nacional de Fornecedores
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Regularize sua empresa para participação em licitações públicas.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:items-center lg:gap-2">
+          <Seal icon={ShieldCheck} label="Ambiente Seguro" />
+          <Seal icon={Lock} label="LGPD" />
+          <Seal icon={FileCheck2} label="SSL" />
+          <Seal icon={HeadphonesIcon} label="Processo Assistido" />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary-deep text-primary-foreground shadow-sm">
+      <Landmark className="h-6 w-6" />
+    </div>
+  );
+}
+
+function Seal({ icon: Icon, label }: { icon: typeof ShieldCheck; label: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border bg-primary-soft/50 px-3 py-2 text-xs font-medium text-primary-deep">
+      <Icon className="h-3.5 w-3.5 text-success" /> {label}
+    </div>
+  );
+}
+
+/* ---------------- PROGRESS + TIMELINE ---------------- */
+
+function ProgressHeader({ current, progress }: { current: number; progress: number }) {
+  return (
+    <div className="rounded-xl border border-border bg-card px-5 py-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Passo {current + 1} de {STEPS.length}
+          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {progress}% do processo concluído
+          </p>
+        </div>
+        <div className="text-right text-xs text-muted-foreground">
+          Protocolo provisório <span className="font-mono text-foreground">CAD-2026-00001254</span>
+        </div>
+      </div>
+      <Progress value={progress} className="mt-3 h-2 bg-primary-soft" />
+    </div>
+  );
+}
+
+function Timeline({ current, onJump }: { current: number; onJump: (i: number) => void }) {
+  return (
+    <div className="sticky top-6 rounded-xl border border-border bg-card p-5">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        Etapas do credenciamento
+      </p>
+      <ol className="space-y-1">
+        {STEPS.map((s, i) => {
+          const done = i < current;
+          const active = i === current;
+          return (
+            <li key={s.key}>
+              <button
+                onClick={() => onJump(i)}
+                className={cn(
+                  "group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors",
+                  active && "bg-primary-soft",
+                  !active && i <= current && "hover:bg-muted",
+                  i > current && "cursor-not-allowed opacity-60",
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                    done && "border-success bg-success text-success-foreground",
+                    active && "border-primary bg-primary text-primary-foreground",
+                    !done && !active && "border-border bg-card text-muted-foreground",
+                  )}
+                >
+                  {done ? <CheckCircle2 className="h-4 w-4" /> : s.num}
+                </div>
+                <div className="flex-1">
+                  <p className={cn("text-sm font-medium", active ? "text-primary-deep" : "text-foreground")}>
+                    {s.short}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">{s.title}</p>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <Separator className="my-4" />
+      <div className="rounded-md bg-primary-soft/60 p-3 text-[11px] leading-relaxed text-primary-deep">
+        Suas informações são protegidas por criptografia TLS 1.3 e armazenadas conforme a LGPD (Lei nº 13.709/2018).
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- STEPS ---------------- */
+
+function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleCnpj = (v: string) => {
+    const m = maskCNPJ(v);
+    update("cnpj", m);
+    if (m.replace(/\D/g, "").length === 14 && !loading) {
+      setLoading(true);
+      update("empresaOk", false);
+      setTimeout(() => {
+        update("razaoSocial", "INOVAÇÃO E TECNOLOGIA EMPRESARIAL LTDA");
+        update("nomeFantasia", "Inovatec Soluções");
+        update("situacao", "ATIVA");
+        update("abertura", "12/03/2017");
+        update("porte", "EPP - Empresa de Pequeno Porte");
+        update("empresaOk", true);
+        setLoading(false);
+      }, 1200);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Field label="CNPJ" required hint="Consulta automática na Receita Federal">
+        <div className="relative">
+          <Input
+            value={data.cnpj}
+            onChange={(e) => handleCnpj(e.target.value)}
+            placeholder="00.000.000/0000-00"
+            className="h-11 font-mono"
+            inputMode="numeric"
+          />
+          {loading && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+          )}
+        </div>
+      </Field>
+
+      {(loading || data.empresaOk) && (
+        <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
+          <div className="mb-4 flex items-center gap-2">
+            {data.empresaOk ? (
+              <>
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                <p className="text-sm font-semibold text-success">Empresa localizada com sucesso.</p>
+              </>
+            ) : (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <p className="text-sm font-medium text-primary-deep">Consultando Receita Federal…</p>
+              </>
+            )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ReadOnly label="Razão Social" value={data.razaoSocial} loading={loading} />
+            <ReadOnly label="Nome Fantasia" value={data.nomeFantasia} loading={loading} />
+            <ReadOnly label="Situação Cadastral" value={data.situacao} loading={loading} badge="success" />
+            <ReadOnly label="Data de Abertura" value={data.abertura} loading={loading} />
+            <ReadOnly label="Porte" value={data.porte} loading={loading} />
+            <ReadOnly label="Natureza Jurídica" value={data.empresaOk ? "Sociedade Empresária Limitada" : ""} loading={loading} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StepResponsavel({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  return (
+    <div className="grid gap-5 sm:grid-cols-2">
+      <Field label="Nome Completo" required className="sm:col-span-2">
+        <Input value={data.nome} onChange={(e) => update("nome", e.target.value)} placeholder="Nome do responsável legal" className="h-11" />
+      </Field>
+      <Field label="CPF" required status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
+        <Input value={data.cpf} onChange={(e) => update("cpf", maskCPF(e.target.value))} placeholder="000.000.000-00" className="h-11 font-mono" inputMode="numeric" />
+      </Field>
+      <Field label="Data de Nascimento" required>
+        <Input type="date" value={data.nascimento} onChange={(e) => update("nascimento", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="Telefone" required>
+        <Input value={data.telefone} onChange={(e) => update("telefone", maskPhone(e.target.value))} placeholder="(00) 00000-0000" className="h-11" />
+      </Field>
+      <Field label="WhatsApp" required>
+        <Input value={data.whatsapp} onChange={(e) => update("whatsapp", maskPhone(e.target.value))} placeholder="(00) 00000-0000" className="h-11" />
+      </Field>
+      <Field label="Email institucional" required status={isValidEmail(data.email) ? "ok" : undefined} statusLabel="Email validado">
+        <Input type="email" value={data.email} onChange={(e) => update("email", e.target.value)} placeholder="responsavel@empresa.com.br" className="h-11" />
+      </Field>
+      <Field label="Cargo" required>
+        <Input value={data.cargo} onChange={(e) => update("cargo", e.target.value)} placeholder="Sócio-administrador" className="h-11" />
+      </Field>
+    </div>
+  );
+}
+
+function StepEndereco({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleCep = (v: string) => {
+    const m = maskCEP(v);
+    update("cep", m);
+    if (m.replace(/\D/g, "").length === 8) {
+      setLoading(true);
+      setTimeout(() => {
+        update("rua", "Avenida Paulista");
+        update("cidade", "São Paulo");
+        update("estado", "SP");
+        setLoading(false);
+      }, 900);
+    }
+  };
+
+  return (
+    <div className="grid gap-5 sm:grid-cols-6">
+      <Field label="CEP" required className="sm:col-span-2">
+        <div className="relative">
+          <Input value={data.cep} onChange={(e) => handleCep(e.target.value)} placeholder="00000-000" className="h-11 font-mono" />
+          {loading && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />}
+        </div>
+      </Field>
+      <Field label="Rua / Logradouro" className="sm:col-span-4">
+        <Input value={data.rua} onChange={(e) => update("rua", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="Número" className="sm:col-span-1">
+        <Input value={data.numero} onChange={(e) => update("numero", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="Complemento" className="sm:col-span-3">
+        <Input value={data.complemento} onChange={(e) => update("complemento", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="Cidade" className="sm:col-span-3">
+        <Input value={data.cidade} onChange={(e) => update("cidade", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="UF" className="sm:col-span-1">
+        <Input value={data.estado} onChange={(e) => update("estado", e.target.value)} className="h-11 uppercase" maxLength={2} />
+      </Field>
+    </div>
+  );
+}
+
+function StepDiagnostico({ data }: { data: FormState }) {
+  const items = [
+    { title: "Regularidade Fiscal", desc: "Verificação de certidões federais, estaduais e municipais.", status: "apto" as const, ref: "Lei 14.133/21, art. 68" },
+    { title: "Capacidade Jurídica", desc: "Análise do contrato social e poderes do representante.", status: "apto" as const, ref: "Art. 66" },
+    { title: "Qualificação Econômico-Financeira", desc: "Balanço patrimonial e índices contábeis.", status: "pendente" as const, ref: "Art. 69" },
+    { title: "Qualificação Técnica", desc: "Atestados de capacidade técnica e registros profissionais.", status: "correcao" as const, ref: "Art. 67" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-primary-soft/30 px-4 py-3 text-sm text-primary-deep">
+        Diagnóstico preliminar gerado automaticamente para o CNPJ {data.cnpj || "—"} com base na Lei nº 14.133/2021.
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {items.map((it) => (
+          <DiagnosticoCard key={it.title} {...it} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DiagnosticoCard({ title, desc, status, ref }: { title: string; desc: string; status: "apto" | "pendente" | "correcao"; ref: string }) {
+  const map = {
+    apto: { label: "Apto", dot: "bg-success", border: "border-success/40", text: "text-success" },
+    pendente: { label: "Pendente", dot: "bg-warning", border: "border-warning/40", text: "text-warning-foreground" },
+    correcao: { label: "Necessita Correção", dot: "bg-destructive", border: "border-destructive/40", text: "text-destructive" },
+  }[status];
+  const Icon = status === "apto" ? CheckCircle2 : status === "pendente" ? AlertCircle : Circle;
+  return (
+    <div className={cn("rounded-lg border bg-card p-5 transition-shadow hover:shadow-md", map.border)}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
+        </div>
+        <Badge variant="outline" className={cn("gap-1 font-medium", map.text)}>
+          <span className={cn("h-1.5 w-1.5 rounded-full", map.dot)} />
+          {map.label}
+        </Badge>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
+        <span>Referência: {ref}</span>
+        <Icon className={cn("h-4 w-4", map.text)} />
+      </div>
+    </div>
+  );
+}
+
+function StepDocumentos({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const docs = [
+    { key: "contrato", label: "Contrato Social Consolidado" },
+    { key: "cnpj", label: "Cartão CNPJ" },
+    { key: "resp", label: "Documento do Responsável (RG/CNH)" },
+    { key: "end", label: "Comprovante de Endereço" },
+  ];
+
+  const handleFile = (key: string, file: File | null) => {
+    if (!file) return;
+    const entry = { name: file.name, size: file.size, status: "uploading" as const, progress: 0 };
+    update("documentos", { ...data.documentos, [key]: entry });
+    let p = 0;
+    const id = setInterval(() => {
+      p += 12;
+      const newDocs = { ...data.documentos };
+      if (p >= 100) {
+        clearInterval(id);
+        update("documentos", { ...newDocs, [key]: { ...entry, progress: 100, status: "analise" } });
+        setTimeout(() => {
+          update("documentos", { ...newDocs, [key]: { ...entry, progress: 100, status: "aprovado" } });
+        }, 1200);
+      } else {
+        update("documentos", { ...newDocs, [key]: { ...entry, progress: p } });
+      }
+    }, 200);
+  };
+
+  return (
+    <div className="space-y-4">
+      {docs.map((d) => (
+        <DropZone key={d.key} label={d.label} entry={data.documentos[d.key]} onFile={(f) => handleFile(d.key, f)} onRemove={() => {
+          const copy = { ...data.documentos }; delete copy[d.key]; update("documentos", copy);
+        }} />
+      ))}
+      <div className="rounded-lg border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
+        Arquivos aceitos: PDF, JPG, PNG. Tamanho máximo de 10MB por documento. Todos os arquivos são criptografados e armazenados em servidores nacionais.
+      </div>
+    </div>
+  );
+}
+
+function DropZone({ label, entry, onFile, onRemove }: { label: string; entry?: FormState["documentos"][string]; onFile: (f: File | null) => void; onRemove: () => void }) {
+  const [drag, setDrag] = useState(false);
+  const statusMap = {
+    uploading: { label: "Enviando", color: "text-primary" },
+    recebido: { label: "Recebido", color: "text-primary" },
+    analise: { label: "Em análise", color: "text-warning-foreground" },
+    aprovado: { label: "Aprovado", color: "text-success" },
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {entry && <span className={cn("text-xs font-semibold", statusMap[entry.status].color)}>{statusMap[entry.status].label}</span>}
+      </div>
+      {!entry ? (
+        <label
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => { e.preventDefault(); setDrag(false); onFile(e.dataTransfer.files?.[0] ?? null); }}
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed py-8 text-center transition-colors",
+            drag ? "border-primary bg-primary-soft" : "border-border bg-muted/30 hover:bg-muted/60",
+          )}
+        >
+          <CloudUpload className="h-6 w-6 text-primary" />
+          <p className="text-sm text-foreground">
+            Arraste o arquivo ou <span className="font-semibold text-primary">selecione do computador</span>
+          </p>
+          <p className="text-[11px] text-muted-foreground">PDF, JPG ou PNG até 10MB</p>
+          <input type="file" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} accept=".pdf,.jpg,.jpeg,.png" />
+        </label>
+      ) : (
+        <div className="rounded-md border border-border bg-muted/40 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-primary-soft text-primary">
+                <FileCheck2 className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{entry.name}</p>
+                <p className="text-[11px] text-muted-foreground">{(entry.size / 1024).toFixed(0)} KB</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onRemove} aria-label="Remover">
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+          <Progress value={entry.progress} className="mt-3 h-1.5 bg-primary-soft" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StepPlano() {
+  const inclusos = [
+    "Credenciamento Assistido por especialistas",
+    "Plataforma CADBRASIL completa",
+    "Consulta automatizada de Certidões",
+    "Assistente Inteligente com IA",
+    "Análise de Editais com IA",
+    "Gestão Documental centralizada",
+    "Gestão Contratual e prazos",
+    "Central de Atendimento dedicada",
+    "Suporte Especializado em licitações",
+  ];
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary-deep to-primary p-7 text-primary-foreground shadow-lg">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] opacity-90">
+          <Sparkles className="h-3.5 w-3.5" /> Habilitação Oficial CADBRASIL
+        </div>
+        <h3 className="mt-3 text-2xl font-bold">Licença Anual de Credenciamento</h3>
+        <p className="mt-1 text-sm opacity-90">
+          Acesso completo à plataforma oficial e suporte operacional contínuo para participação em licitações públicas em todo o território nacional.
+        </p>
+        <div className="mt-6 flex items-end gap-2">
+          <span className="text-4xl font-bold">R$ 985,00</span>
+          <span className="pb-1 text-sm opacity-80">/ vigência anual</span>
+        </div>
+        <div className="mt-4 rounded-md bg-white/10 px-3 py-2 text-xs">
+          Pagamento único anual · Emissão de Nota Fiscal · Cancelamento conforme contrato
+        </div>
+        <div className="mt-6 flex flex-wrap gap-2 text-[11px]">
+          <span className="rounded bg-white/15 px-2 py-1">SICAF integrado</span>
+          <span className="rounded bg-white/15 px-2 py-1">PNCP compatível</span>
+          <span className="rounded bg-white/15 px-2 py-1">Lei 14.133/21</span>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-6">
+        <p className="text-sm font-semibold text-foreground">Inclusos na licença</p>
+        <Separator className="my-3" />
+        <ul className="space-y-2.5">
+          {inclusos.map((i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+              {i}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 rounded-md border border-border bg-primary-soft/40 p-3 text-xs leading-relaxed text-primary-deep">
+          A licença CADBRASIL contempla a habilitação assistida e suporte operacional, não constituindo mera assinatura de software.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepRevisao({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  return (
+    <div className="space-y-5">
+      <ReviewBlock title="Empresa">
+        <ReviewItem k="CNPJ" v={data.cnpj || "—"} />
+        <ReviewItem k="Razão Social" v={data.razaoSocial || "—"} />
+        <ReviewItem k="Nome Fantasia" v={data.nomeFantasia || "—"} />
+        <ReviewItem k="Situação" v={data.situacao || "—"} />
+      </ReviewBlock>
+      <ReviewBlock title="Responsável Legal">
+        <ReviewItem k="Nome" v={data.nome || "—"} />
+        <ReviewItem k="CPF" v={data.cpf || "—"} />
+        <ReviewItem k="Email" v={data.email || "—"} />
+        <ReviewItem k="Telefone" v={data.telefone || "—"} />
+      </ReviewBlock>
+      <ReviewBlock title="Endereço">
+        <ReviewItem k="CEP" v={data.cep || "—"} />
+        <ReviewItem k="Endereço" v={[data.rua, data.numero, data.complemento].filter(Boolean).join(", ") || "—"} />
+        <ReviewItem k="Cidade/UF" v={[data.cidade, data.estado].filter(Boolean).join(" / ") || "—"} />
+      </ReviewBlock>
+      <ReviewBlock title="Documentos">
+        <ReviewItem k="Arquivos enviados" v={`${Object.keys(data.documentos).length} de 4`} />
+      </ReviewBlock>
+      <ReviewBlock title="Plano">
+        <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
+      </ReviewBlock>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-primary-soft/30 p-4">
+        <Checkbox checked={data.declaracao} onCheckedChange={(c) => update("declaracao", Boolean(c))} className="mt-0.5" />
+        <span className="text-sm leading-relaxed text-foreground">
+          Declaro, sob as penas da lei, que as informações e documentos fornecidos são verdadeiros e estou ciente das responsabilidades civis e penais previstas na legislação vigente, em especial no art. 299 do Código Penal.
+        </span>
+      </label>
+    </div>
+  );
+}
+
+/* ---------------- SUCCESS ---------------- */
+
+function SuccessScreen() {
+  return (
+    <div className="min-h-screen bg-background">
+      <TopBar />
+      <Header />
+      <main className="mx-auto max-w-3xl px-4 py-16 lg:px-8">
+        <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-lg animate-scale-in">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/10 ring-8 ring-success/5">
+            <BadgeCheck className="h-10 w-10 text-success" />
+          </div>
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-foreground">
+            Credenciamento Recebido com Sucesso
+          </h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+            Seu processo foi encaminhado para análise da equipe especializada da CADBRASIL. Você receberá atualizações por email institucional.
+          </p>
+
+          <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-lg border border-border bg-primary-soft/40 px-5 py-3 text-left">
+            <FileCheck2 className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Número do Processo</p>
+              <p className="font-mono text-base font-semibold text-primary-deep">CAD-2026-00001254</p>
+            </div>
+          </div>
+
+          <ul className="mx-auto mt-8 max-w-md space-y-2 text-left text-sm">
+            {["Análise documental", "Validação cadastral", "Liberação da plataforma", "Início do acompanhamento SICAF"].map((s) => (
+              <li key={s} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success" /> {s}
+              </li>
+            ))}
+          </ul>
+
+          <Button className="mt-8 h-11 bg-primary px-6 hover:bg-primary-deep">Acessar Portal do Fornecedor</Button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ---------------- SHARED PRIMITIVES ---------------- */
+
+function Field({ label, required, hint, status, statusLabel, children, className }: { label: string; required?: boolean; hint?: string; status?: "ok"; statusLabel?: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        {status === "ok" && (
+          <span className="flex items-center gap-1 text-[11px] font-medium text-success">
+            <CheckCircle2 className="h-3 w-3" /> {statusLabel}
+          </span>
+        )}
+      </div>
+      {children}
+      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+function ReadOnly({ label, value, loading, badge }: { label: string; value: string; loading?: boolean; badge?: "success" }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      {loading ? (
+        <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
+      ) : badge === "success" && value ? (
+        <Badge className="bg-success text-success-foreground hover:bg-success">{value}</Badge>
+      ) : (
+        <p className="text-sm font-medium text-foreground">{value || "—"}</p>
+      )}
+    </div>
+  );
+}
+
+function ReviewBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <div className="border-b border-border bg-muted/40 px-4 py-2.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">{title}</p>
+      </div>
+      <dl className="grid gap-3 p-4 sm:grid-cols-2">{children}</dl>
+    </div>
+  );
+}
+
+function ReviewItem({ k, v }: { k: string; v: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{k}</dt>
+      <dd className="text-sm font-medium text-foreground">{v}</dd>
+    </div>
+  );
+}
+
+function InstitutionalFooter() {
+  return (
+    <footer className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p>© {new Date().getFullYear()} CADBRASIL — Plataforma de Credenciamento de Fornecedores.</p>
+        <div className="flex flex-wrap gap-4">
+          <span>Política de Privacidade</span>
+          <span>Termos de Uso</span>
+          <span>LGPD</span>
+          <span>Ouvidoria</span>
+        </div>
+      </div>
+    </footer>
+  );
+}

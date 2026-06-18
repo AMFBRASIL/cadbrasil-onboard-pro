@@ -1,29 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CadastroWizard } from "@/components/cadastro/CadastroWizard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "CADBRASIL — Credenciamento Nacional de Fornecedores" },
+      { name: "description", content: "Regularize sua empresa para participação em licitações públicas através da plataforma oficial CADBRASIL." },
+      { property: "og:title", content: "CADBRASIL — Credenciamento Nacional de Fornecedores" },
+      { property: "og:description", content: "Plataforma de credenciamento assistido para fornecedores do mercado público brasileiro." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+  return <CadastroWizard />;
 }
