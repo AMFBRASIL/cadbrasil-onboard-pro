@@ -692,10 +692,7 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
         <ReviewItem k="Endereço" v={[data.rua, data.numero, data.complemento].filter(Boolean).join(", ") || "—"} />
         <ReviewItem k="Cidade/UF" v={[data.cidade, data.estado].filter(Boolean).join(" / ") || "—"} />
       </ReviewBlock>
-      <ReviewBlock title="Documentos">
-        <ReviewItem k="Arquivos enviados" v={`${Object.keys(data.documentos).length} de 4`} />
-      </ReviewBlock>
-      <ReviewBlock title="Plano">
+      <ReviewBlock title="Licença CADBRASIL">
         <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
       </ReviewBlock>
 
