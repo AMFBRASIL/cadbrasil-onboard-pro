@@ -8,10 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   ShieldCheck,
-  Lock,
   FileCheck2,
-  HeadphonesIcon,
-  Building2,
   UserRound,
   MapPin,
   ClipboardList,
@@ -27,9 +24,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Landmark,
   BadgeCheck,
 } from "lucide-react";
+import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
 
 type StepKey =
