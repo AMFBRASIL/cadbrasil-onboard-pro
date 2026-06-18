@@ -565,7 +565,9 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
         <div className="animate-fade-in grid gap-5 sm:grid-cols-2">
           <Field label="CPF" required className="sm:col-span-2" status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
             <Input
+              ref={cpfRef}
               value={data.cpf}
+
               onChange={(e) => {
                 update("cpf", maskCPF(e.target.value));
                 update("empresaOk", e.target.value.replace(/\D/g, "").length === 11);
