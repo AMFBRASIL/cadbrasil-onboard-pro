@@ -106,6 +106,10 @@ interface FormState {
 
   documentos: Record<string, { name: string; size: number; status: "uploading" | "recebido" | "analise" | "aprovado"; progress: number }>;
 
+  loginEmail: string;
+  senha: string;
+  confirmaSenha: string;
+
   declaracao: boolean;
 }
 
