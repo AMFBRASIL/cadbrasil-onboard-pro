@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   ShieldCheck,
   FileCheck2,
+  Building2,
   UserRound,
   MapPin,
   ClipboardList,
