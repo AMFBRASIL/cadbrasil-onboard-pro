@@ -236,7 +236,8 @@ export function CadastroWizard() {
                   {current === 2 && <StepEndereco data={data} update={update} />}
                   {current === 3 && <StepDiagnostico data={data} />}
                   {current === 4 && <StepPlano />}
-                  {current === 5 && <StepRevisao data={data} update={update} />}
+                  {current === 5 && <StepUsuario data={data} update={update} />}
+                  {current === 6 && <StepRevisao data={data} update={update} />}
                 </div>
               </div>
 
