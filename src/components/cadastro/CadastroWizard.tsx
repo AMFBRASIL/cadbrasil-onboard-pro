@@ -447,7 +447,11 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
                   update("situacao", "");
                   update("abertura", "");
                   update("porte", "");
+                  setTimeout(() => {
+                    (opt.key === "pj" ? cnpjRef : cpfRef).current?.focus();
+                  }, 50);
                 }}
+
                 className={cn(
                   "group relative flex flex-col items-start gap-3 rounded-xl border-2 p-5 text-left transition-all",
                   selected
