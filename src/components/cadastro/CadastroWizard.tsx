@@ -29,6 +29,22 @@ import {
 } from "lucide-react";
 import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+// CNPJs já cadastrados (simulação). Substituir por chamada real à API quando disponível.
+const EXISTING_CNPJS = new Set<string>([
+  "11111111000111",
+  "00000000000191",
+]);
 
 type StepKey =
   | "empresa"
