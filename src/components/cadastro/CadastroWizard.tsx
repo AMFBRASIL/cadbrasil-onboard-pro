@@ -29,6 +29,22 @@ import {
 } from "lucide-react";
 import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+// CNPJs já cadastrados (simulação). Substituir por chamada real à API quando disponível.
+const EXISTING_CNPJS = new Set<string>([
+  "11111111000111",
+  "00000000000191",
+]);
 
 type StepKey =
   | "empresa"
@@ -361,11 +377,18 @@ function Timeline({ current, onJump }: { current: number; onJump: (i: number) =>
 
 function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
+  const [existsAlert, setExistsAlert] = useState(false);
 
   const handleCnpj = (v: string) => {
     const m = maskCNPJ(v);
     update("cnpj", m);
-    if (m.replace(/\D/g, "").length === 14 && !loading) {
+    const digits = m.replace(/\D/g, "");
+    if (digits.length === 14 && !loading) {
+      if (EXISTING_CNPJS.has(digits)) {
+        update("empresaOk", false);
+        setExistsAlert(true);
+        return;
+      }
       setLoading(true);
       update("empresaOk", false);
       setTimeout(() => {
@@ -396,6 +419,30 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           )}
         </div>
       </Field>
+
+      <AlertDialog open={existsAlert} onOpenChange={setExistsAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-warning" />
+              CNPJ já cadastrado
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Identificamos que o CNPJ <span className="font-mono font-semibold">{data.cnpj}</span> já possui cadastro ativo na CADBRASIL.
+              Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => update("cnpj", "")}>Informar outro CNPJ</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
+                Ir para a plataforma
+              </a>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {(loading || data.empresaOk) && (
         <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
