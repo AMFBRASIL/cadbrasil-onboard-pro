@@ -58,6 +58,7 @@ type StepKey =
   | "endereco"
   | "diagnostico"
   | "plano"
+  | "usuario"
   | "revisao";
 
 interface StepDef {
@@ -74,7 +75,8 @@ const STEPS: StepDef[] = [
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
   { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
   { key: "plano", num: 5, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
-  { key: "revisao", num: 6, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+  { key: "usuario", num: 6, title: "Acesso ao Portal do Fornecedor", short: "Usuário", icon: KeyRound },
+  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
 
 interface FormState {
