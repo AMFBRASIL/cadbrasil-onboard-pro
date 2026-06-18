@@ -1064,6 +1064,10 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
       <ReviewBlock title="Licença CADBRASIL">
         <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
       </ReviewBlock>
+      <ReviewBlock title="Acesso ao Portal do Fornecedor">
+        <ReviewItem k="E-mail de login" v={data.loginEmail || "—"} />
+        <ReviewItem k="Senha" v={data.senha ? "•".repeat(Math.min(data.senha.length, 12)) : "—"} />
+      </ReviewBlock>
 
       <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-primary-soft/30 p-4">
         <Checkbox checked={data.declaracao} onCheckedChange={(c) => update("declaracao", Boolean(c))} className="mt-0.5" />
