@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -381,6 +381,9 @@ function Timeline({ current, onJump }: { current: number; onJump: (i: number) =>
 function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
   const [existsAlert, setExistsAlert] = useState(false);
+  const cnpjRef = useRef<HTMLInputElement>(null);
+  const cpfRef = useRef<HTMLInputElement>(null);
+
 
   const handleCnpj = (v: string) => {
     const m = maskCNPJ(v);
@@ -444,7 +447,11 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
                   update("situacao", "");
                   update("abertura", "");
                   update("porte", "");
+                  setTimeout(() => {
+                    (opt.key === "pj" ? cnpjRef : cpfRef).current?.focus();
+                  }, 50);
                 }}
+
                 className={cn(
                   "group relative flex flex-col items-start gap-3 rounded-xl border-2 p-5 text-left transition-all",
                   selected
@@ -489,7 +496,9 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           <Field label="CNPJ" required hint="Consulta automática na Receita Federal">
             <div className="relative">
               <Input
+                ref={cnpjRef}
                 value={data.cnpj}
+
                 onChange={(e) => handleCnpj(e.target.value)}
                 placeholder="00.000.000/0000-00"
                 className="h-11 font-mono"
@@ -556,7 +565,9 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
         <div className="animate-fade-in grid gap-5 sm:grid-cols-2">
           <Field label="CPF" required className="sm:col-span-2" status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
             <Input
+              ref={cpfRef}
               value={data.cpf}
+
               onChange={(e) => {
                 update("cpf", maskCPF(e.target.value));
                 update("empresaOk", e.target.value.replace(/\D/g, "").length === 11);
