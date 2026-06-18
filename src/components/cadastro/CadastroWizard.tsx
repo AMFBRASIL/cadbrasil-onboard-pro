@@ -496,7 +496,9 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           <Field label="CNPJ" required hint="Consulta automática na Receita Federal">
             <div className="relative">
               <Input
+                ref={cnpjRef}
                 value={data.cnpj}
+
                 onChange={(e) => handleCnpj(e.target.value)}
                 placeholder="00.000.000/0000-00"
                 className="h-11 font-mono"
