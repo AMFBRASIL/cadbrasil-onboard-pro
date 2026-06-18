@@ -136,6 +136,9 @@ const INITIAL: FormState = {
   cidade: "",
   estado: "",
   documentos: {},
+  loginEmail: "",
+  senha: "",
+  confirmaSenha: "",
   declaracao: false,
 };
 
