@@ -282,49 +282,75 @@ function ProgressHeader({ current, progress }: { current: number; progress: numb
 
 function Timeline({ current, onJump }: { current: number; onJump: (i: number) => void }) {
   return (
-    <div className="sticky top-6 rounded-xl border border-border bg-card p-5">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        Etapas do credenciamento
-      </p>
-      <ol className="space-y-1">
-        {STEPS.map((s, i) => {
-          const done = i < current;
-          const active = i === current;
-          return (
-            <li key={s.key}>
-              <button
-                onClick={() => onJump(i)}
-                className={cn(
-                  "group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors",
-                  active && "bg-primary-soft",
-                  !active && i <= current && "hover:bg-muted",
-                  i > current && "cursor-not-allowed opacity-60",
-                )}
-              >
-                <div
+    <div className="sticky top-6 space-y-4">
+      <div className="rounded-xl border border-border bg-card p-5">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Etapas do credenciamento
+        </p>
+        <ol className="space-y-1">
+          {STEPS.map((s, i) => {
+            const done = i < current;
+            const active = i === current;
+            return (
+              <li key={s.key}>
+                <button
+                  onClick={() => onJump(i)}
                   className={cn(
-                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                    done && "border-success bg-success text-success-foreground",
-                    active && "border-primary bg-primary text-primary-foreground",
-                    !done && !active && "border-border bg-card text-muted-foreground",
+                    "group flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors",
+                    active && "bg-primary-soft",
+                    !active && i <= current && "hover:bg-muted",
+                    i > current && "cursor-not-allowed opacity-60",
                   )}
                 >
-                  {done ? <CheckCircle2 className="h-4 w-4" /> : s.num}
-                </div>
-                <div className="flex-1">
-                  <p className={cn("text-sm font-medium", active ? "text-primary-deep" : "text-foreground")}>
-                    {s.short}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">{s.title}</p>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-      <Separator className="my-4" />
-      <div className="rounded-md bg-primary-soft/60 p-3 text-[11px] leading-relaxed text-primary-deep">
-        Suas informações são protegidas por criptografia TLS 1.3 e armazenadas conforme a LGPD (Lei nº 13.709/2018).
+                  <div
+                    className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                      done && "border-success bg-success text-success-foreground",
+                      active && "border-primary bg-primary text-primary-foreground",
+                      !done && !active && "border-border bg-card text-muted-foreground",
+                    )}
+                  >
+                    {done ? <CheckCircle2 className="h-4 w-4" /> : s.num}
+                  </div>
+                  <div className="flex-1">
+                    <p className={cn("text-sm font-medium", active ? "text-primary-deep" : "text-foreground")}>
+                      {s.short}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">{s.title}</p>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        <Separator className="my-4" />
+        <div className="rounded-md bg-primary-soft/60 p-3 text-[11px] leading-relaxed text-primary-deep">
+          Suas informações são protegidas por criptografia TLS 1.3 e armazenadas conforme a LGPD (Lei nº 13.709/2018).
+        </div>
+      </div>
+
+      {/* Cards abaixo dos steps */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <Save className="h-3.5 w-3.5" />
+          Salvamento Automático
+        </div>
+        <p className="mt-2 text-sm font-semibold text-foreground">Último salvamento há 1 min</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Você pode retomar este cadastro a qualquer momento neste navegador.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Suporte</p>
+        <p className="mt-2 text-sm font-semibold text-foreground">Central de Atendimento</p>
+        <a
+          href="tel:551121220202"
+          className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+        >
+          (11) 2122-0202
+        </a>
+        <p className="mt-1 text-xs text-muted-foreground">atendimento@cadbrasil.com.br</p>
       </div>
     </div>
   );
