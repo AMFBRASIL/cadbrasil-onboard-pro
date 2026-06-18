@@ -35,7 +35,6 @@ type StepKey =
   | "responsavel"
   | "endereco"
   | "diagnostico"
-  | "documentos"
   | "plano"
   | "revisao";
 
@@ -52,9 +51,8 @@ const STEPS: StepDef[] = [
   { key: "responsavel", num: 2, title: "Responsável Legal", short: "Responsável", icon: UserRound },
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
   { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
-  { key: "documentos", num: 5, title: "Envio de Documentos", short: "Documentos", icon: FileUp },
-  { key: "plano", num: 6, title: "Plano de Acesso", short: "Plano", icon: CreditCard },
-  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+  { key: "plano", num: 5, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
+  { key: "revisao", num: 6, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
 
 interface FormState {
@@ -203,9 +201,8 @@ export function CadastroWizard() {
                   {current === 1 && <StepResponsavel data={data} update={update} />}
                   {current === 2 && <StepEndereco data={data} update={update} />}
                   {current === 3 && <StepDiagnostico data={data} />}
-                  {current === 4 && <StepDocumentos data={data} update={update} />}
-                  {current === 5 && <StepPlano />}
-                  {current === 6 && <StepRevisao data={data} update={update} />}
+                  {current === 4 && <StepPlano />}
+                  {current === 5 && <StepRevisao data={data} update={update} />}
                 </div>
               </div>
 
@@ -251,7 +248,6 @@ function stepSubtitle(k: StepKey) {
     case "responsavel": return "Dados do representante legal responsável pelo credenciamento da empresa.";
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
     case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
-    case "documentos": return "Envio seguro e criptografado dos documentos comprobatórios.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
   }
@@ -696,10 +692,7 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
         <ReviewItem k="Endereço" v={[data.rua, data.numero, data.complemento].filter(Boolean).join(", ") || "—"} />
         <ReviewItem k="Cidade/UF" v={[data.cidade, data.estado].filter(Boolean).join(" / ") || "—"} />
       </ReviewBlock>
-      <ReviewBlock title="Documentos">
-        <ReviewItem k="Arquivos enviados" v={`${Object.keys(data.documentos).length} de 4`} />
-      </ReviewBlock>
-      <ReviewBlock title="Plano">
+      <ReviewBlock title="Licença CADBRASIL">
         <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
       </ReviewBlock>
 
