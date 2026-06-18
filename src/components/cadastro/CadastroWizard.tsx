@@ -381,6 +381,9 @@ function Timeline({ current, onJump }: { current: number; onJump: (i: number) =>
 function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
   const [existsAlert, setExistsAlert] = useState(false);
+  const cnpjRef = useRef<HTMLInputElement>(null);
+  const cpfRef = useRef<HTMLInputElement>(null);
+
 
   const handleCnpj = (v: string) => {
     const m = maskCNPJ(v);
