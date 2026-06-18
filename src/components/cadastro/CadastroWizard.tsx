@@ -26,6 +26,12 @@ import {
   ArrowLeft,
   Sparkles,
   BadgeCheck,
+  KeyRound,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Copy,
+  Check,
 } from "lucide-react";
 import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
@@ -52,6 +58,7 @@ type StepKey =
   | "endereco"
   | "diagnostico"
   | "plano"
+  | "usuario"
   | "revisao";
 
 interface StepDef {
@@ -68,7 +75,8 @@ const STEPS: StepDef[] = [
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
   { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
   { key: "plano", num: 5, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
-  { key: "revisao", num: 6, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+  { key: "usuario", num: 6, title: "Acesso ao Portal do Fornecedor", short: "Usuário", icon: KeyRound },
+  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
 
 interface FormState {
@@ -98,6 +106,10 @@ interface FormState {
 
   documentos: Record<string, { name: string; size: number; status: "uploading" | "recebido" | "analise" | "aprovado"; progress: number }>;
 
+  loginEmail: string;
+  senha: string;
+  confirmaSenha: string;
+
   declaracao: boolean;
 }
 
@@ -124,6 +136,9 @@ const INITIAL: FormState = {
   cidade: "",
   estado: "",
   documentos: {},
+  loginEmail: "",
+  senha: "",
+  confirmaSenha: "",
   declaracao: false,
 };
 
@@ -221,7 +236,8 @@ export function CadastroWizard() {
                   {current === 2 && <StepEndereco data={data} update={update} />}
                   {current === 3 && <StepDiagnostico data={data} />}
                   {current === 4 && <StepPlano />}
-                  {current === 5 && <StepRevisao data={data} update={update} />}
+                  {current === 5 && <StepUsuario data={data} update={update} />}
+                  {current === 6 && <StepRevisao data={data} update={update} />}
                 </div>
               </div>
 
@@ -281,6 +297,7 @@ function stepSubtitle(k: StepKey) {
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
     case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
+    case "usuario": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
   }
 }
@@ -865,6 +882,165 @@ function StepPlano() {
   );
 }
 
+function StepUsuario({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Prefilla o e-mail de login com o e-mail do responsável (uma única vez)
+  useEffect(() => {
+    if (!data.loginEmail && data.email) update("loginEmail", data.email);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const generatePassword = () => {
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const lower = "abcdefghijkmnopqrstuvwxyz";
+    const nums = "23456789";
+    const sym = "!@#$%&*?";
+    const all = upper + lower + nums + sym;
+    const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+    let pwd = pick(upper) + pick(lower) + pick(nums) + pick(sym);
+    for (let i = 0; i < 8; i++) pwd += pick(all);
+    pwd = pwd.split("").sort(() => Math.random() - 0.5).join("");
+    update("senha", pwd);
+    update("confirmaSenha", pwd);
+    setShowPwd(true);
+    setShowConfirm(true);
+  };
+
+  const copyPassword = async () => {
+    if (!data.senha) return;
+    try {
+      await navigator.clipboard.writeText(data.senha);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {/* noop */}
+  };
+
+  const pwd = data.senha;
+  const hasLen = pwd.length >= 8;
+  const hasUpper = /[A-Z]/.test(pwd);
+  const hasLower = /[a-z]/.test(pwd);
+  const hasNum = /\d/.test(pwd);
+  const hasSym = /[^A-Za-z0-9]/.test(pwd);
+  const score = [hasLen, hasUpper, hasLower, hasNum, hasSym].filter(Boolean).length;
+  const strength =
+    score <= 2 ? { label: "Fraca", color: "bg-destructive", text: "text-destructive", w: "w-1/4" } :
+    score === 3 ? { label: "Média", color: "bg-warning", text: "text-warning-foreground", w: "w-2/4" } :
+    score === 4 ? { label: "Boa", color: "bg-primary", text: "text-primary", w: "w-3/4" } :
+    { label: "Forte", color: "bg-success", text: "text-success", w: "w-full" };
+
+  const emailOk = isValidEmail(data.loginEmail);
+  const senhasIguais = pwd.length > 0 && pwd === data.confirmaSenha;
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-primary/20 bg-primary-soft/30 px-4 py-3 text-sm text-primary-deep">
+        Estas credenciais serão utilizadas para acessar o <strong>Portal do Fornecedor CADBRASIL</strong> (fornecedor.cadbrasil.com.br) após a aprovação do credenciamento.
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="E-mail de login" required className="sm:col-span-2" status={emailOk ? "ok" : undefined} statusLabel="E-mail válido">
+          <Input
+            type="email"
+            value={data.loginEmail}
+            onChange={(e) => update("loginEmail", e.target.value)}
+            placeholder="seu.email@empresa.com.br"
+            className="h-11"
+            autoComplete="username"
+          />
+        </Field>
+
+        <Field label="Senha" required hint="Mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos.">
+          <div className="relative">
+            <Input
+              type={showPwd ? "text" : "password"}
+              value={data.senha}
+              onChange={(e) => update("senha", e.target.value)}
+              placeholder="Crie uma senha segura"
+              className="h-11 pr-20 font-mono"
+              autoComplete="new-password"
+            />
+            <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center">
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={copyPassword} aria-label="Copiar senha">
+                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowPwd((s) => !s)} aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}>
+                {showPwd ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            </div>
+          </div>
+        </Field>
+
+        <Field
+          label="Confirmar senha"
+          required
+          status={senhasIguais ? "ok" : undefined}
+          statusLabel="Senhas conferem"
+        >
+          <div className="relative">
+            <Input
+              type={showConfirm ? "text" : "password"}
+              value={data.confirmaSenha}
+              onChange={(e) => update("confirmaSenha", e.target.value)}
+              placeholder="Repita a senha"
+              className="h-11 pr-12 font-mono"
+              autoComplete="new-password"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2"
+              onClick={() => setShowConfirm((s) => !s)}
+              aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showConfirm ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+            </Button>
+          </div>
+          {data.confirmaSenha && !senhasIguais && (
+            <p className="text-[11px] font-medium text-destructive">As senhas não coincidem.</p>
+          )}
+        </Field>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <p className="text-sm font-medium text-foreground">Força da senha</p>
+          </div>
+          <span className={cn("text-xs font-semibold", pwd ? strength.text : "text-muted-foreground")}>
+            {pwd ? strength.label : "—"}
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          {pwd && <div className={cn("h-full rounded-full transition-all", strength.color, strength.w)} />}
+        </div>
+        <ul className="mt-3 grid gap-1.5 text-[11px] text-muted-foreground sm:grid-cols-2">
+          {[
+            { ok: hasLen, label: "Mínimo de 8 caracteres" },
+            { ok: hasUpper, label: "Letra maiúscula (A-Z)" },
+            { ok: hasLower, label: "Letra minúscula (a-z)" },
+            { ok: hasNum, label: "Número (0-9)" },
+            { ok: hasSym, label: "Símbolo (!@#$…)" },
+          ].map((r) => (
+            <li key={r.label} className={cn("flex items-center gap-1.5", r.ok && "text-success")}>
+              {r.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+              {r.label}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Button type="button" variant="outline" onClick={generatePassword} className="gap-2">
+        <RefreshCw className="h-4 w-4" /> Gerar senha segura automaticamente
+      </Button>
+    </div>
+  );
+}
+
 function StepRevisao({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   return (
     <div className="space-y-5">
@@ -887,6 +1063,10 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
       </ReviewBlock>
       <ReviewBlock title="Licença CADBRASIL">
         <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
+      </ReviewBlock>
+      <ReviewBlock title="Acesso ao Portal do Fornecedor">
+        <ReviewItem k="E-mail de login" v={data.loginEmail || "—"} />
+        <ReviewItem k="Senha" v={data.senha ? "•".repeat(Math.min(data.senha.length, 12)) : "—"} />
       </ReviewBlock>
 
       <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-primary-soft/30 p-4">
