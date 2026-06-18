@@ -297,6 +297,7 @@ function stepSubtitle(k: StepKey) {
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
     case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
+    case "usuario": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
   }
 }
