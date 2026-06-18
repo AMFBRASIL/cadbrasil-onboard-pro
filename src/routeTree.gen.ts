@@ -9,8 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ConclusaoCadastroRoute = ConclusaoCadastroRouteImport.update({
+  id: '/conclusao-cadastro',
+  path: '/conclusao-cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +25,39 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/conclusao-cadastro': typeof ConclusaoCadastroRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/conclusao-cadastro': typeof ConclusaoCadastroRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/conclusao-cadastro': typeof ConclusaoCadastroRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/conclusao-cadastro'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/conclusao-cadastro'
+  id: '__root__' | '/' | '/conclusao-cadastro'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/conclusao-cadastro': {
+      id: '/conclusao-cadastro'
+      path: '/conclusao-cadastro'
+      fullPath: '/conclusao-cadastro'
+      preLoaderRoute: typeof ConclusaoCadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConclusaoCadastroRoute: ConclusaoCadastroRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
