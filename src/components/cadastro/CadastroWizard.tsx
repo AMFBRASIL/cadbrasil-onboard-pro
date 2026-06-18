@@ -26,6 +26,12 @@ import {
   ArrowLeft,
   Sparkles,
   BadgeCheck,
+  KeyRound,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Copy,
+  Check,
 } from "lucide-react";
 import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
