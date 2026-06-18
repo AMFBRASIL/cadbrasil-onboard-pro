@@ -845,14 +845,53 @@ function ReviewItem({ k, v }: { k: string; v: string }) {
 
 function InstitutionalFooter() {
   return (
-    <footer className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p>© {new Date().getFullYear()} CADBRASIL — Plataforma de Credenciamento de Fornecedores.</p>
-        <div className="flex flex-wrap gap-4">
-          <span>Política de Privacidade</span>
-          <span>Termos de Uso</span>
-          <span>LGPD</span>
-          <span>Ouvidoria</span>
+    <footer className="mt-10 border-t border-border bg-muted/20 pt-8 pb-8 text-xs text-muted-foreground">
+      <div className="grid gap-8 sm:grid-cols-3">
+        <div>
+          <p className="text-sm font-bold tracking-tight text-foreground">CADBRASIL</p>
+          <p className="mt-2 max-w-xs leading-relaxed">
+            Plataforma privada de credenciamento e assessoria para licitações públicas. Sem vínculo com órgãos governamentais.
+          </p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm font-semibold text-foreground">Conformidade</p>
+          <p className="mt-2 leading-relaxed">
+            LGPD · Lei 13.709/2018 · Dados criptografados em trânsito e em repouso.
+          </p>
+          <div className="mt-3 inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1">
+            <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Diminuir fonte">
+              <span className="text-[10px] font-bold">A-</span>
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Tamanho normal da fonte">
+              <span className="text-xs font-bold">T</span>
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Aumentar fonte">
+              <span className="text-sm font-bold">A+</span>
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Alto contraste">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2v20" />
+              </svg>
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Daltonismo">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Z" />
+                <path d="M12 2a10 10 0 0 1 0 20 10 10 0 0 1 0-20Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="text-right">
+          <p className="text-sm font-semibold text-foreground">Suporte institucional</p>
+          <p className="mt-2 leading-relaxed">
+            <a href="mailto:privacidade@cadbrasil.com.br" className="hover:text-primary hover:underline">privacidade@cadbrasil.com.br</a>
+            <span className="mx-1">·</span>
+            <a href="tel:551121220202" className="hover:text-primary hover:underline">(11) 2122-0202</a>
+          </p>
+          <p className="mt-2 text-[11px]">© 2026 CADBRASIL · Todos os direitos reservados</p>
         </div>
       </div>
     </footer>
