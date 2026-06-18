@@ -408,73 +408,178 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
 
   return (
     <div className="space-y-6">
-      <Field label="CNPJ" required hint="Consulta automática na Receita Federal">
-        <div className="relative">
-          <Input
-            value={data.cnpj}
-            onChange={(e) => handleCnpj(e.target.value)}
-            placeholder="00.000.000/0000-00"
-            className="h-11 font-mono"
-            inputMode="numeric"
-          />
-          {loading && (
-            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+      <div>
+        <p className="mb-3 text-sm font-medium text-foreground">
+          Selecione o tipo de cadastro para o processo de licitação <span className="text-destructive">*</span>
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            {
+              key: "pj" as const,
+              icon: Building2,
+              title: "Pessoa Jurídica",
+              desc: "Empresa com CNPJ ativo. Indicado para sociedades, MEI, EIRELI e demais pessoas jurídicas que participam de licitações.",
+              tag: "CNPJ",
+            },
+            {
+              key: "pf" as const,
+              icon: UserRound,
+              title: "Pessoa Física",
+              desc: "Profissional autônomo ou prestador individual. Indicado para credenciamento de pessoa física em processos licitatórios.",
+              tag: "CPF",
+            },
+          ].map((opt) => {
+            const Icon = opt.icon;
+            const selected = data.tipoPessoa === opt.key;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => {
+                  update("tipoPessoa", opt.key);
+                  update("empresaOk", false);
+                  update("cnpj", "");
+                  update("razaoSocial", "");
+                  update("nomeFantasia", "");
+                  update("situacao", "");
+                  update("abertura", "");
+                  update("porte", "");
+                }}
+                className={cn(
+                  "group relative flex flex-col items-start gap-3 rounded-xl border-2 p-5 text-left transition-all",
+                  selected
+                    ? "border-primary bg-primary-soft/40 shadow-[0_8px_24px_-12px_rgba(16,40,80,0.25)]"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-primary-soft/20",
+                )}
+                aria-pressed={selected}
+              >
+                <div className="flex w-full items-start justify-between">
+                  <div
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-lg transition-colors",
+                      selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
+                    )}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div
+                    className={cn(
+                      "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors",
+                      selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+                    )}
+                  >
+                    {selected && <CheckCircle2 className="h-5 w-5" />}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground">{opt.title}</h3>
+                    <Badge variant="outline" className="text-[10px] font-medium">{opt.tag}</Badge>
+                  </div>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{opt.desc}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {data.tipoPessoa === "pj" && (
+        <div className="animate-fade-in space-y-6">
+          <Field label="CNPJ" required hint="Consulta automática na Receita Federal">
+            <div className="relative">
+              <Input
+                value={data.cnpj}
+                onChange={(e) => handleCnpj(e.target.value)}
+                placeholder="00.000.000/0000-00"
+                className="h-11 font-mono"
+                inputMode="numeric"
+              />
+              {loading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+              )}
+            </div>
+          </Field>
+
+          <AlertDialog open={existsAlert} onOpenChange={setExistsAlert}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-warning" />
+                  CNPJ já cadastrado
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Identificamos que o CNPJ <span className="font-mono font-semibold">{data.cnpj}</span> já possui cadastro ativo na CADBRASIL.
+                  Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => update("cnpj", "")}>Informar outro CNPJ</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
+                    Ir para a plataforma
+                  </a>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {(loading || data.empresaOk) && (
+            <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
+              <div className="mb-4 flex items-center gap-2">
+                {data.empresaOk ? (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <p className="text-sm font-semibold text-success">Empresa localizada com sucesso.</p>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-primary-deep">Consultando Receita Federal…</p>
+                  </>
+                )}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ReadOnly label="Razão Social" value={data.razaoSocial} loading={loading} />
+                <ReadOnly label="Nome Fantasia" value={data.nomeFantasia} loading={loading} />
+                <ReadOnly label="Situação Cadastral" value={data.situacao} loading={loading} badge="success" />
+                <ReadOnly label="Data de Abertura" value={data.abertura} loading={loading} />
+                <ReadOnly label="Porte" value={data.porte} loading={loading} />
+                <ReadOnly label="Natureza Jurídica" value={data.empresaOk ? "Sociedade Empresária Limitada" : ""} loading={loading} />
+              </div>
+            </div>
           )}
         </div>
-      </Field>
+      )}
 
-      <AlertDialog open={existsAlert} onOpenChange={setExistsAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-warning" />
-              CNPJ já cadastrado
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Identificamos que o CNPJ <span className="font-mono font-semibold">{data.cnpj}</span> já possui cadastro ativo na CADBRASIL.
-              Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => update("cnpj", "")}>Informar outro CNPJ</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
-                Ir para a plataforma
-              </a>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-
-      {(loading || data.empresaOk) && (
-        <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
-          <div className="mb-4 flex items-center gap-2">
-            {data.empresaOk ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                <p className="text-sm font-semibold text-success">Empresa localizada com sucesso.</p>
-              </>
-            ) : (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <p className="text-sm font-medium text-primary-deep">Consultando Receita Federal…</p>
-              </>
-            )}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ReadOnly label="Razão Social" value={data.razaoSocial} loading={loading} />
-            <ReadOnly label="Nome Fantasia" value={data.nomeFantasia} loading={loading} />
-            <ReadOnly label="Situação Cadastral" value={data.situacao} loading={loading} badge="success" />
-            <ReadOnly label="Data de Abertura" value={data.abertura} loading={loading} />
-            <ReadOnly label="Porte" value={data.porte} loading={loading} />
-            <ReadOnly label="Natureza Jurídica" value={data.empresaOk ? "Sociedade Empresária Limitada" : ""} loading={loading} />
-          </div>
+      {data.tipoPessoa === "pf" && (
+        <div className="animate-fade-in grid gap-5 sm:grid-cols-2">
+          <Field label="CPF" required className="sm:col-span-2" status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
+            <Input
+              value={data.cpf}
+              onChange={(e) => {
+                update("cpf", maskCPF(e.target.value));
+                update("empresaOk", e.target.value.replace(/\D/g, "").length === 11);
+              }}
+              placeholder="000.000.000-00"
+              className="h-11 font-mono"
+              inputMode="numeric"
+            />
+          </Field>
+          <Field label="Nome Completo" required className="sm:col-span-2">
+            <Input
+              value={data.nome}
+              onChange={(e) => update("nome", e.target.value)}
+              placeholder="Nome conforme documento oficial"
+              className="h-11"
+            />
+          </Field>
         </div>
       )}
     </div>
   );
 }
+
 
 function StepResponsavel({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   return (
