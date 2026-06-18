@@ -162,11 +162,11 @@ export function CadastroWizard() {
   if (submitted) return <SuccessScreen />;
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans antialiased">
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
       <TopBar />
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-8 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
           <aside className="hidden lg:block">
             <Timeline current={current} onJump={(i) => i <= current && setCurrent(i)} />
@@ -233,11 +233,11 @@ export function CadastroWizard() {
                 </div>
               </div>
             </div>
-
-            <InstitutionalFooter />
           </section>
         </div>
       </main>
+
+      <InstitutionalFooter />
 
       {/* WhatsApp flutuante */}
       <a
