@@ -848,29 +848,6 @@ function InstitutionalFooter() {
             <p className="mt-2 leading-relaxed">
               LGPD · Lei 13.709/2018 · Dados criptografados em trânsito e em repouso.
             </p>
-            <div className="mt-3 inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1">
-              <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Diminuir fonte">
-                <span className="text-[10px] font-bold">A-</span>
-              </button>
-              <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Tamanho normal da fonte">
-                <span className="text-xs font-bold">T</span>
-              </button>
-              <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Aumentar fonte">
-                <span className="text-sm font-bold">A+</span>
-              </button>
-              <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Alto contraste">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 2v20" />
-                </svg>
-              </button>
-              <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted" aria-label="Daltonismo">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 12a10 10 0 1 1 20 0 10 10 0 0 1-20 0Z" />
-                  <path d="M12 2a10 10 0 0 1 0 20 10 10 0 0 1 0-20Z" />
-                </svg>
-              </button>
-            </div>
           </div>
 
           <div className="text-right">
