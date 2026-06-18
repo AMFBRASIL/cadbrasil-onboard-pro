@@ -72,6 +72,7 @@ const STEPS: StepDef[] = [
 ];
 
 interface FormState {
+  tipoPessoa: "" | "pf" | "pj";
   cnpj: string;
   razaoSocial: string;
   nomeFantasia: string;
@@ -101,6 +102,7 @@ interface FormState {
 }
 
 const INITIAL: FormState = {
+  tipoPessoa: "",
   cnpj: "",
   razaoSocial: "",
   nomeFantasia: "",
@@ -124,6 +126,7 @@ const INITIAL: FormState = {
   documentos: {},
   declaracao: false,
 };
+
 
 function maskCNPJ(v: string) {
   return v.replace(/\D/g, "").slice(0, 14)
