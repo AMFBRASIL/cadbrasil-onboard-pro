@@ -20,6 +20,7 @@ if [ ! -f .output/server/index.mjs ]; then
 fi
 
 echo "==> Reiniciando PM2..."
+chmod +x start.sh deploy.sh
 if pm2 describe cadbrasilCadastro >/dev/null 2>&1; then
   pm2 restart ecosystem.config.cjs
 else

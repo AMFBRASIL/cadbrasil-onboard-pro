@@ -1,15 +1,18 @@
 /**
- * PM2 — produção no VPS (Linux).
+ * PM2 — produção no VPS (Linux) / aaPanel.
  * Uso: pm2 start ecosystem.config.cjs
- * Requer: npm run build já executado e arquivo .env na raiz do projeto.
  */
+const path = require("path");
+
+const ROOT = __dirname;
+
 module.exports = {
   apps: [
     {
       name: "cadbrasilCadastro",
-      cwd: __dirname,
-      script: "node",
-      args: "--env-file=.env .output/server/index.mjs",
+      cwd: ROOT,
+      script: path.join(ROOT, "start.sh"),
+      interpreter: "bash",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
