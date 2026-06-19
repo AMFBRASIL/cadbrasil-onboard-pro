@@ -1,6 +1,6 @@
 /**
  * PM2 — produção no VPS (Linux) / aaPanel.
- * Uso: pm2 start ecosystem.config.cjs
+ * Usa "npm run start" — mais compatível que node_args no aaPanel.
  */
 const path = require("path");
 
@@ -11,9 +11,8 @@ module.exports = {
     {
       name: "cadbrasilCadastro",
       cwd: ROOT,
-      script: path.join(ROOT, ".output/server/index.mjs"),
-      interpreter: "node",
-      node_args: "--env-file=.env",
+      script: "npm",
+      args: "run start",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
