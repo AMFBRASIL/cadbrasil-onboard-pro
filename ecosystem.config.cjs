@@ -11,8 +11,9 @@ module.exports = {
     {
       name: "cadbrasilCadastro",
       cwd: ROOT,
-      script: path.join(ROOT, "start.sh"),
-      interpreter: "bash",
+      script: path.join(ROOT, ".output/server/index.mjs"),
+      interpreter: "node",
+      node_args: "--env-file=.env",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
