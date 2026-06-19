@@ -1,6 +1,7 @@
 /**
  * PM2 — produção no VPS (Linux) / aaPanel.
- * Usa start.sh (garante .env + build antes de subir o Node).
+ * Node direto (sem bash) — evita erro de CRLF no start.sh.
+ * O .env é carregado em src/server.ts via load-env.ts.
  */
 const path = require("path");
 
@@ -11,12 +12,14 @@ module.exports = {
     {
       name: "cadbrasilCadastro",
       cwd: ROOT,
-      script: path.join(ROOT, "start.sh"),
-      interpreter: "/bin/bash",
+      script: path.join(ROOT, ".output/server/index.mjs"),
+      interpreter: "node",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
       max_memory_restart: "512M",
+      error_file: path.join(ROOT, "logs/pm2-error.log"),
+      out_file: path.join(ROOT, "logs/pm2-out.log"),
       env: {
         NODE_ENV: "production",
         HOST: "0.0.0.0",
