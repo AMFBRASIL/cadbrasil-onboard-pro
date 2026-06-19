@@ -292,11 +292,14 @@ export function CadastroWizard() {
       trackConversion("cadastro_concluido", 985, { protocolo: res.protocolo });
       await navigate({ to: "/conclusao-cadastro", search: { protocolo: res.protocolo } });
     } catch (err) {
-      const msg = err instanceof Error && err.message ? err.message : "";
+      const raw = err instanceof Error ? err.message : String(err ?? "");
+      const isHtml = /<!doctype html>/i.test(raw) || raw.includes("This page didn't load");
       setSubmitError(
-        msg
-          ? `Falha ao enviar o cadastro: ${msg}`
-          : "Erro de conexão ao enviar o cadastro. Tente novamente.",
+        isHtml
+          ? "Erro interno no servidor ao processar o cadastro. Tente novamente em instantes."
+          : raw
+            ? `Falha ao enviar o cadastro: ${raw}`
+            : "Erro de conexão ao enviar o cadastro. Tente novamente.",
       );
     } finally {
       setSubmitting(false);

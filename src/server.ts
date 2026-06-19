@@ -22,6 +22,10 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
+function isServerFnPath(pathname: string): boolean {
+  return pathname.startsWith("/_serverFn/");
+}
+
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
@@ -39,6 +43,13 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
+}
+
+async function logServerFnError(pathname: string, response: Response): Promise<void> {
+  if (!isServerFnPath(pathname) || response.status < 500) return;
+  const body = await response.clone().text();
+  const captured = consumeLastCapturedError();
+  console.error("[serverFn]", pathname, response.status, captured ?? body.slice(0, 500));
 }
 
 async function healthResponse(): Promise<Response> {
@@ -83,12 +94,22 @@ export default {
       return healthResponse();
     }
 
+    const serverFn = isServerFnPath(pathname);
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+      await logServerFnError(pathname, response);
+      if (serverFn) return response;
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
-      console.error(error);
+      console.error("[server]", pathname, error);
+      if (serverFn) {
+        return Response.json(
+          { success: false, error: "Erro interno no servidor. Tente novamente." },
+          { status: 500, headers: { "content-type": "application/json" } },
+        );
+      }
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
