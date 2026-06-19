@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CADBRASIL">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a365d"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+  <!-- Landmark / instituição (mesmo conceito do logo no site) -->
+  <path fill="#ffffff" d="M16 6 L24 11 V24 H20 V14 H12 V24 H8 V11 Z"/>
+  <rect x="14" y="18" width="4" height="6" fill="#ffffff"/>
+  <circle cx="16" cy="9" r="1.2" fill="#ffffff"/>
+</svg>
