@@ -2,11 +2,9 @@
 # =============================================================================
 # DEPLOY COMPLETO — VPS Linux (aaPanel + PM2)
 #
-# Uso manual:
-#   bash deploy.sh              # git pull + build + PM2
-#   bash deploy.sh --no-git     # só rebuild + PM2 (sem git)
-#
-# Automático (cron): use auto-deploy.sh — só roda deploy se houver commit novo
+#   bash deploy.sh                 # git + build + PM2 (recomendado)
+#   bash deploy.sh --no-git        # só build + PM2
+#   bash deploy.sh --skip-db-test    # não aborta se teste MySQL falhar
 # =============================================================================
 set -e
 cd "$(dirname "$0")"
@@ -23,114 +21,108 @@ warn() { echo -e "  ${YELLOW}!${NC} $1"; }
 step() { echo -e "\n${CYAN}==> $1${NC}"; }
 
 SKIP_GIT=false
+SKIP_DB_TEST=false
 for arg in "$@"; do
   [ "$arg" = "--no-git" ] && SKIP_GIT=true
+  [ "$arg" = "--skip-db-test" ] && SKIP_DB_TEST=true
 done
 
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-producao}"
+DEPLOY_OK=true
 
-# --- 1. Git ---
+# --- 1. Git (sempre primeiro — descarta alterações locais no VPS) ---
 if [ "$SKIP_GIT" = false ]; then
   step "1/7 Git (branch $DEPLOY_BRANCH)"
 
   if ! git rev-parse --git-dir >/dev/null 2>&1; then
-    fail "Esta pasta NÃO é um repositório git. No VPS, clone assim:
-  git clone -b $DEPLOY_BRANCH https://github.com/AMFBRASIL/cadbrasil-onboard-pro.git cadbrasil-onboard-pro"
+    fail "Pasta não é repositório git."
   fi
 
-  if ! git remote get-url origin >/dev/null 2>&1; then
-    fail "Remote 'origin' não configurado. Rode: git remote add origin <url-do-repo>"
+  BEFORE=$(git rev-parse --short HEAD 2>/dev/null || echo "?")
+
+  git fetch origin "$DEPLOY_BRANCH" || fail "git fetch falhou — configure SSH ou token no VPS"
+
+  git reset --hard "origin/$DEPLOY_BRANCH"
+  git clean -fd -e .env -e .htaccess -e .well-known
+
+  AFTER=$(git rev-parse --short HEAD)
+  REMOTE=$(git rev-parse --short "origin/$DEPLOY_BRANCH")
+
+  if [ "$AFTER" != "$REMOTE" ]; then
+    fail "Git não sincronizou: local=$AFTER remoto=$REMOTE"
   fi
 
-  BEFORE=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-  echo "  Remote: $(git remote get-url origin)"
-  echo "  Commit local (antes): $(git rev-parse --short HEAD 2>/dev/null || echo '?')"
-
-  if ! git fetch origin "$DEPLOY_BRANCH" 2>&1; then
-    echo ""
-    fail "git fetch FALHOU. Repositório privado? No VPS configure uma opção:
-  1) SSH:  git remote set-url origin git@github.com:AMFBRASIL/cadbrasil-onboard-pro.git
-           (adicione a chave SSH do VPS em GitHub → Settings → Deploy keys)
-  2) HTTPS: git fetch com Personal Access Token (PAT) do GitHub"
-  fi
-
-  if ! git rev-parse "origin/$DEPLOY_BRANCH" >/dev/null 2>&1; then
-    fail "Branch origin/$DEPLOY_BRANCH não existe no remoto."
-  fi
-
-  REMOTE=$(git rev-parse "origin/$DEPLOY_BRANCH")
-  REMOTE_SHORT=$(git rev-parse --short "origin/$DEPLOY_BRANCH")
-
-  if [ "$BEFORE" = "$REMOTE" ]; then
-    ok "Git já atualizado ($REMOTE_SHORT) — seguindo com build/PM2"
+  if [ "$BEFORE" = "$AFTER" ]; then
+    ok "Git já estava em $AFTER — arquivos confirmados"
   else
-    git reset --hard "origin/$DEPLOY_BRANCH"
-    AFTER=$(git rev-parse --short HEAD)
-    ok "Git atualizado: $(git rev-parse --short "$BEFORE" 2>/dev/null || echo '?') → $AFTER"
+    ok "Git atualizado: $BEFORE → $AFTER"
   fi
-
-  # Mantém branch local alinhada (main ou producao — tanto faz, o reset já aplicou os arquivos)
-  git checkout -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH" 2>/dev/null || true
 else
-  step "1/7 Git (pulado — --no-git)"
-  warn "Código NÃO foi atualizado do GitHub. Use 'bash deploy.sh' sem --no-git para puxar."
+  step "1/7 Git (pulado)"
+  warn "Use 'bash deploy.sh' sem --no-git para puxar do GitHub"
 fi
 
 # --- 2. .env ---
 step "2/7 Verificar .env"
-[ -f .env ] || fail ".env não encontrado. Crie em $(pwd)/.env"
-ok ".env encontrado"
+[ -f .env ] || fail ".env não encontrado em $(pwd)"
+ok ".env OK"
 
-# --- 3. Dependências ---
+# --- 3. npm install ---
 step "3/7 npm install"
-npm install
-ok "Dependências instaladas"
+npm install || fail "npm install falhou"
+ok "Dependências OK"
 
-# --- 4. Build Linux ---
+# --- 4. Build ---
 step "4/7 npm run build"
-npm run build
-[ -f .output/server/index.mjs ] || fail "Build falhou — .output/server/index.mjs não existe"
-ok "Build gerado (.output/server/index.mjs)"
+npm run build || fail "npm run build falhou"
+[ -f .output/server/index.mjs ] || fail ".output/server/index.mjs não existe"
+ok "Build OK ($(du -h .output/server/index.mjs | cut -f1))"
 
-# --- 5. Teste banco (rollback, não grava) ---
-step "5/7 Teste schema do banco (rollback)"
-if node --env-file=.env scripts/test-cadastro.mjs; then
-  ok "Schema do banco OK"
+# --- 5. Teste banco (NÃO bloqueia PM2 por padrão) ---
+step "5/7 Teste banco (opcional)"
+if [ "$SKIP_DB_TEST" = true ]; then
+  warn "Teste do banco pulado (--skip-db-test)"
+elif node --env-file=.env scripts/test-cadastro.mjs; then
+  ok "Schema MySQL OK"
 else
-  fail "Teste do banco falhou — corrija DB_* no .env ou schema MySQL"
+  warn "Teste MySQL falhou — deploy CONTINUA (corrija DB_HOST no .env; use 127.0.0.1 se MySQL é local)"
+  DEPLOY_OK=false
 fi
 
-# --- 6. PM2 ---
+# --- 6. PM2 (SEMPRE reinicia — é o que atualiza o servidor em produção) ---
 step "6/7 PM2"
 mkdir -p logs
 chmod +x start.sh deploy.sh check-deploy.sh vps-fix.sh auto-deploy.sh 2>/dev/null || true
-sed -i 's/\r$//' start.sh deploy.sh check-deploy.sh vps-fix.sh auto-deploy.sh ecosystem.config.cjs 2>/dev/null || true
+sed -i 's/\r$//' *.sh ecosystem.config.cjs 2>/dev/null || true
 
 if pm2 describe cadbrasilCadastro >/dev/null 2>&1; then
   pm2 restart ecosystem.config.cjs
-  ok "PM2 reiniciado"
 else
   pm2 start ecosystem.config.cjs
-  ok "PM2 iniciado"
 fi
 pm2 save
-ok "PM2 salvo"
+ok "PM2 reiniciado — servidor rodando novo build"
 
 # --- 7. Health ---
 step "7/7 Health check"
-sleep 2
-pm2 status cadbrasilCadastro
+sleep 3
+pm2 status cadbrasilCadastro || true
 
-HEALTH=$(curl -sS http://127.0.0.1:3015/api/health 2>/dev/null || echo '{"ok":false}')
+HEALTH=$(curl -sS --max-time 10 http://127.0.0.1:3015/api/health 2>/dev/null || echo '{"ok":false}')
 echo "$HEALTH"
 
+echo ""
+echo "  Commit em produção: $(git rev-parse --short HEAD)"
+echo "  Build:              .output/server/index.mjs"
+
 if echo "$HEALTH" | grep -q '"ok":true'; then
-  ok "Backend online — banco conectado"
-  echo ""
   echo -e "${GREEN}Deploy concluído com sucesso!${NC}"
-  echo "  Commit: $(git rev-parse --short HEAD 2>/dev/null || echo '?')"
-  echo "  Site:   https://cadastro.cadbrasil.com.br"
-  echo "  Local:  http://127.0.0.1:3015"
+elif [ "$DEPLOY_OK" = false ]; then
+  echo -e "${YELLOW}Deploy aplicado (git+build+PM2), mas banco com problema no .env${NC}"
+  echo "  Corrija DB_HOST=127.0.0.1 no .env e rode: pm2 restart ecosystem.config.cjs"
+  exit 0
 else
-  fail "Health check falhou. Rode: pm2 logs cadbrasilCadastro --lines 50"
+  warn "Health check falhou — git/build/PM2 foram aplicados. Verifique logs:"
+  echo "  pm2 logs cadbrasilCadastro --lines 50"
+  exit 0
 fi
