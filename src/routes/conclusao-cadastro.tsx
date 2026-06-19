@@ -7,7 +7,12 @@ import {
 } from "lucide-react";
 import { TopBar, Header } from "@/components/cadastro/LayoutParts";
 
+type ConclusaoSearch = { protocolo: string };
+
 export const Route = createFileRoute("/conclusao-cadastro")({
+  validateSearch: (search: Record<string, unknown>): ConclusaoSearch => ({
+    protocolo: typeof search.protocolo === "string" ? search.protocolo : "",
+  }),
   head: () => ({
     meta: [
       { title: "Credenciamento Recebido — CADBRASIL" },
@@ -18,6 +23,7 @@ export const Route = createFileRoute("/conclusao-cadastro")({
 });
 
 function ConclusaoCadastroPage() {
+  const { protocolo } = Route.useSearch();
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
@@ -37,8 +43,8 @@ function ConclusaoCadastroPage() {
           <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-lg border border-border bg-primary-soft/40 px-5 py-3 text-left">
             <FileCheck2 className="h-5 w-5 text-primary" />
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Número do Processo</p>
-              <p className="font-mono text-base font-semibold text-primary-deep">CAD-2026-00001254</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Protocolo CADBRASIL</p>
+              <p className="font-mono text-base font-semibold text-primary-deep">{protocolo || "—"}</p>
             </div>
           </div>
 
@@ -50,8 +56,10 @@ function ConclusaoCadastroPage() {
             ))}
           </ul>
 
-          <Button className="mt-8 h-11 bg-primary px-6 hover:bg-primary-deep">
-            Acessar Portal do Fornecedor
+          <Button asChild className="mt-8 h-11 bg-primary px-6 hover:bg-primary-deep">
+            <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
+              Acessar Portal do Fornecedor
+            </a>
           </Button>
         </div>
       </main>

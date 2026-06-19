@@ -11,6 +11,18 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { captureUtmParams } from "../lib/tracking";
+
+const SITE_URL = "https://cadastro.cadbrasil.com.br";
+const SITE_NAME = "CADBRASIL";
+const SITE_DESCRIPTION =
+  "Cadastre sua empresa na CADBRASIL e fale com especialistas em SICAF e licitações públicas. Processo rápido, seguro, com suporte humano e conformidade LGPD.";
+
+/* IDs de marketing (mesmos do sistema legado) */
+const GTM_ID = "GTM-TRVTMS6M";
+const GOOGLE_ADS_ID = "AW-16460586067";
+const GOOGLE_TAG_ID = "GT-KTPDP2TV";
+const BING_UET_ID = "343231769";
 
 function NotFoundComponent() {
   return (
@@ -77,24 +89,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Credenciamento Brasil is a platform for businesses to register for public procurement." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Credenciamento Brasil is a platform for businesses to register for public procurement." },
+      { title: "Cadastro CADBRASIL — SICAF, licitações e consultoria" },
+      { name: "description", content: SITE_DESCRIPTION },
+      {
+        name: "keywords",
+        content:
+          "SICAF, cadastro SICAF, licitações públicas, CADBRASIL, credenciamento SICAF, assessoria licitações, fornecedor governo, Compras.gov.br, habilitação SICAF, certidões SICAF, CRC SICAF, documentos licitação",
+      },
+      { name: "author", content: SITE_NAME },
+      { name: "robots", content: "index, follow" },
+      {
+        name: "googlebot",
+        content: "index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1",
+      },
+      { name: "google-site-verification", content: GOOGLE_TAG_ID },
+      { name: "msvalidate.01", content: BING_UET_ID },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Credenciamento Brasil is a platform for businesses to register for public procurement." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8b98c1fd-66c4-4116-a3c6-03db15d14430/id-preview-dbfa8dd2--de768887-e460-4a43-8efe-437f57f9d7d4.lovable.app-1781813451769.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8b98c1fd-66c4-4116-a3c6-03db15d14430/id-preview-dbfa8dd2--de768887-e460-4a43-8efe-437f57f9d7d4.lovable.app-1781813451769.png" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:title", content: "CADBRASIL — Assessoria SICAF e Licitações Públicas" },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      { property: "og:image", content: `${SITE_URL}/hero-bg.jpg` },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "CADBRASIL — Assessoria SICAF e Licitações Públicas" },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: `${SITE_URL}/hero-bg.jpg` },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -109,13 +133,99 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+function MarketingTags() {
+  return (
+    <>
+      {/* Google Tag Manager */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`,
+        }}
+      />
+
+      {/* Google Ads & Google Tag (gtag.js) */}
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','${GOOGLE_ADS_ID}');
+gtag('config','${GOOGLE_TAG_ID}');`,
+        }}
+      />
+
+      {/* Microsoft Ads (Bing UET) */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(w,d,t,r,u){var f,n,i;w[u]=w[u]||[],f=function(){
+var o={ti:"${BING_UET_ID}",enableAutoSpaTracking:true};
+o.q=w[u],w[u]=new UET(o),w[u].push("pageLoad");},
+n=d.createElement(t),n.src=r,n.async=1,n.onload=n.onreadystatechange=function(){
+var s=this.readyState;s&&s!=="loaded"&&s!=="complete"||(f(),n.onload=n.onreadystatechange=null);},
+i=d.getElementsByTagName(t)[0],i.parentNode.insertBefore(n,i);
+})(window,document,"script","https://bat.bing.com/bat.js","uetq");`,
+        }}
+      />
+    </>
+  );
+}
+
+function StructuredData() {
+  const organization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo-cadbrasil.png`,
+    description: SITE_DESCRIPTION,
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "privacidade@cadbrasil.com.br",
+      contactType: "customer service",
+      availableLanguage: "Portuguese",
+    },
+    sameAs: ["https://fornecedor.cadbrasil.com.br"],
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    inLanguage: "pt-BR",
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }} />
+    </>
+  );
+}
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <MarketingTags />
+        <StructuredData />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+            title="gtm"
+          />
+        </noscript>
         {children}
         <Scripts />
       </body>
@@ -125,6 +235,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Captura parâmetros de campanha (UTM/gclid/msclkid) o quanto antes.
+  useEffect(() => {
+    captureUtmParams();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

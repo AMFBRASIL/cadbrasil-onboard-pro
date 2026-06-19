@@ -26,7 +26,15 @@ import {
   ArrowLeft,
   Sparkles,
   BadgeCheck,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Copy,
+  RefreshCw,
+  Minus,
+  Plus,
 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { TopBar, Header } from "./LayoutParts";
 import { cn } from "@/lib/utils";
 import {
@@ -39,12 +47,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// CNPJs já cadastrados (simulação). Substituir por chamada real à API quando disponível.
-const EXISTING_CNPJS = new Set<string>([
-  "11111111000111",
-  "00000000000191",
-]);
+import { consultarDocumentoExistente } from "@/lib/cliente-consulta";
+import { consultarCnpj } from "@/lib/cnpj-consulta";
+import { criarCadastro } from "@/lib/cadastro";
+import { gerarSenhaForte } from "@/lib/senha";
+import { getTrackingForPayload, trackConversion } from "@/lib/tracking";
+import type { CnaeItem } from "@/lib/cnae";
 
 type StepKey =
   | "empresa"
@@ -52,6 +60,7 @@ type StepKey =
   | "endereco"
   | "diagnostico"
   | "plano"
+  | "acesso"
   | "revisao";
 
 interface StepDef {
@@ -68,7 +77,8 @@ const STEPS: StepDef[] = [
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
   { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
   { key: "plano", num: 5, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
-  { key: "revisao", num: 6, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+  { key: "acesso", num: 6, title: "Acesso ao Portal", short: "Acesso", icon: KeyRound },
+  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
 
 interface FormState {
@@ -79,6 +89,11 @@ interface FormState {
   situacao: string;
   abertura: string;
   porte: string;
+  porteCodigo: string;
+  natureza: string;
+  inscricaoEstadual: string;
+  segmento: string;
+  cnaes: CnaeItem[];
   empresaOk: boolean;
 
   nome: string;
@@ -93,8 +108,13 @@ interface FormState {
   rua: string;
   numero: string;
   complemento: string;
+  bairro: string;
   cidade: string;
   estado: string;
+
+  emailAcesso: string;
+  senha: string;
+  confirmarSenha: string;
 
   documentos: Record<string, { name: string; size: number; status: "uploading" | "recebido" | "analise" | "aprovado"; progress: number }>;
 
@@ -109,6 +129,11 @@ const INITIAL: FormState = {
   situacao: "",
   abertura: "",
   porte: "",
+  porteCodigo: "",
+  natureza: "",
+  inscricaoEstadual: "",
+  segmento: "",
+  cnaes: [],
   empresaOk: false,
   nome: "",
   cpf: "",
@@ -121,8 +146,12 @@ const INITIAL: FormState = {
   rua: "",
   numero: "",
   complemento: "",
+  bairro: "",
   cidade: "",
   estado: "",
+  emailAcesso: "",
+  senha: "",
+  confirmarSenha: "",
   documentos: {},
   declaracao: false,
 };
@@ -152,15 +181,29 @@ function maskCEP(v: string) {
 function isValidEmail(e: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
-function isValidCPF(cpf: string) {
-  return cpf.replace(/\D/g, "").length === 11;
+function isValidCPF(value: string) {
+  const cpf = value.replace(/\D/g, "");
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(cpf[i], 10) * (10 - i);
+  let d1 = (sum * 10) % 11;
+  if (d1 === 10) d1 = 0;
+  if (d1 !== parseInt(cpf[9], 10)) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(cpf[i], 10) * (11 - i);
+  let d2 = (sum * 10) % 11;
+  if (d2 === 10) d2 = 0;
+  return d2 === parseInt(cpf[10], 10);
 }
 
 export function CadastroWizard() {
+  const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [data, setData] = useState<FormState>(INITIAL);
   const [savedAgo, setSavedAgo] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // autosave indicator
   useEffect(() => {
@@ -175,10 +218,90 @@ export function CadastroWizard() {
     setData((d) => ({ ...d, [k]: v }));
   }, []);
 
-  const next = () => setCurrent((c) => Math.min(STEPS.length - 1, c + 1));
-  const prev = () => setCurrent((c) => Math.max(0, c - 1));
+  const acessoValido =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.emailAcesso.trim()) &&
+    isSenhaForte(data.senha) &&
+    data.senha === data.confirmarSenha;
 
-  if (submitted) return <SuccessScreen />;
+  const next = () => {
+    const stepKey = STEPS[current].key;
+
+    if (stepKey === "empresa" && data.tipoPessoa === "pf" && !isValidCPF(data.cpf)) {
+      setSubmitError("Informe um CPF válido para continuar.");
+      return;
+    }
+
+    if (stepKey === "responsavel" && !isValidCPF(data.cpf)) {
+      setSubmitError("Informe um CPF válido do responsável para continuar.");
+      return;
+    }
+
+    if (STEPS[current].key === "acesso" && !acessoValido) {
+      setSubmitError(
+        data.senha !== data.confirmarSenha
+          ? "As senhas não coincidem."
+          : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.emailAcesso.trim())
+            ? "Informe um e-mail de login válido."
+            : "A senha deve ter no mínimo 8 caracteres, com maiúsculas, minúsculas, números e símbolos.",
+      );
+      return;
+    }
+    setSubmitError("");
+    setCurrent((c) => Math.min(STEPS.length - 1, c + 1));
+  };
+  const prev = () => {
+    setSubmitError("");
+    setCurrent((c) => Math.max(0, c - 1));
+  };
+
+  const handleFinalizar = async () => {
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const res = await criarCadastro({
+        data: {
+          tipoPessoa: data.tipoPessoa === "pj" ? "PJ" : "PF",
+          cnpj: data.cnpj,
+          razaoSocial: data.razaoSocial,
+          nomeFantasia: data.nomeFantasia,
+          inscricaoEstadual: data.inscricaoEstadual,
+          porte: data.porteCodigo,
+          segmento: data.segmento,
+          cnaes: data.cnaes,
+          nomeResponsavel: data.nome,
+          cpf: data.cpf,
+          cargo: data.cargo,
+          telefone: data.telefone,
+          email: data.email,
+          cep: data.cep,
+          rua: data.rua,
+          numero: data.numero,
+          complemento: data.complemento,
+          bairro: data.bairro,
+          cidade: data.cidade,
+          estado: data.estado,
+          emailAcesso: data.emailAcesso,
+          senha: data.senha,
+          tracking: getTrackingForPayload(),
+        },
+      });
+      if (!res.success) {
+        setSubmitError(res.error);
+        return;
+      }
+      trackConversion("cadastro_concluido", 985, { protocolo: res.protocolo });
+      await navigate({ to: "/conclusao-cadastro", search: { protocolo: res.protocolo } });
+    } catch (err) {
+      const msg = err instanceof Error && err.message ? err.message : "";
+      setSubmitError(
+        msg
+          ? `Falha ao enviar o cadastro: ${msg}`
+          : "Erro de conexão ao enviar o cadastro. Tente novamente.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
@@ -221,8 +344,15 @@ export function CadastroWizard() {
                   {current === 2 && <StepEndereco data={data} update={update} />}
                   {current === 3 && <StepDiagnostico data={data} />}
                   {current === 4 && <StepPlano />}
-                  {current === 5 && <StepRevisao data={data} update={update} />}
+                  {current === 5 && <StepAcesso data={data} update={update} />}
+                  {current === 6 && <StepRevisao data={data} update={update} />}
                 </div>
+                {submitError && (
+                  <div className="mt-4 flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {submitError}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/40 px-6 py-4 rounded-b-xl">
@@ -242,11 +372,16 @@ export function CadastroWizard() {
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => setSubmitted(true)}
-                      disabled={!data.declaracao}
+                      onClick={handleFinalizar}
+                      disabled={!data.declaracao || submitting}
                       className="gap-2 bg-success text-success-foreground hover:opacity-90 disabled:opacity-50"
                     >
-                      <ShieldCheck className="h-4 w-4" /> Finalizar Credenciamento
+                      {submitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4" />
+                      )}
+                      {submitting ? "Enviando…" : "Finalizar Credenciamento"}
                     </Button>
                   )}
                 </div>
@@ -281,6 +416,7 @@ function stepSubtitle(k: StepKey) {
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
     case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
+    case "acesso": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
   }
 }
@@ -380,32 +516,97 @@ function Timeline({ current, onJump }: { current: number; onJump: (i: number) =>
 
 function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
-  const [existsAlert, setExistsAlert] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [alertInfo, setAlertInfo] = useState<{ tipo: "pj" | "pf"; doc: string } | null>(null);
   const cnpjRef = useRef<HTMLInputElement>(null);
   const cpfRef = useRef<HTMLInputElement>(null);
 
+  // Consulta REAL dos dados do CNPJ na Receita (CNPJ.ws) e autopreenche o formulário.
+  const fmtData = (iso: string) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse().join("/") : iso;
+
+  const preencherDadosEmpresa = async (digits: string) => {
+    setLoading(true);
+    update("empresaOk", false);
+    try {
+      const res = await consultarCnpj({ data: digits });
+      if (!res.ok) {
+        // Não localizado / serviço indisponível → libera preenchimento manual.
+        update("situacao", "");
+        update("empresaOk", true);
+        return;
+      }
+      const d = res.data;
+      update("razaoSocial", d.razao_social || "");
+      update("nomeFantasia", d.nome_fantasia || "");
+      update("situacao", d.situacao || "ATIVA");
+      update("abertura", fmtData(d.data_abertura || ""));
+      update("porte", d.porte_label || "");
+      update("porteCodigo", d.porte || "");
+      update("natureza", d.natureza_juridica || "");
+      update("inscricaoEstadual", d.inscricao_estadual || "");
+      update("segmento", d.cnae_fiscal_descricao || "");
+      update("cnaes", d.cnaes || []);
+      if (d.cep) update("cep", maskCEP(d.cep));
+      update("rua", d.logradouro || "");
+      update("numero", d.numero || "");
+      update("complemento", d.complemento || "");
+      update("bairro", d.bairro || "");
+      update("cidade", d.municipio || "");
+      update("estado", (d.uf || "").toUpperCase());
+      if (d.ddd_telefone_1) update("telefone", maskPhone(d.ddd_telefone_1));
+      if (d.email) update("email", d.email.toLowerCase());
+      update("empresaOk", true);
+    } catch {
+      // fail-open: permite preenchimento manual se a consulta falhar.
+      update("empresaOk", true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCnpj = (v: string) => {
     const m = maskCNPJ(v);
     update("cnpj", m);
     const digits = m.replace(/\D/g, "");
-    if (digits.length === 14 && !loading) {
-      if (EXISTING_CNPJS.has(digits)) {
-        update("empresaOk", false);
-        setExistsAlert(true);
-        return;
-      }
-      setLoading(true);
+    if (digits.length === 14 && !loading && !checking) {
       update("empresaOk", false);
-      setTimeout(() => {
-        update("razaoSocial", "INOVAÇÃO E TECNOLOGIA EMPRESARIAL LTDA");
-        update("nomeFantasia", "Inovatec Soluções");
-        update("situacao", "ATIVA");
-        update("abertura", "12/03/2017");
-        update("porte", "EPP - Empresa de Pequeno Porte");
-        update("empresaOk", true);
-        setLoading(false);
-      }, 1200);
+      setChecking(true);
+      consultarDocumentoExistente({ data: digits })
+        .then((res) => {
+          if (res.exists) {
+            update("empresaOk", false);
+            setAlertInfo({ tipo: "pj", doc: m });
+            return;
+          }
+          void preencherDadosEmpresa(digits);
+        })
+        .catch(() => {
+          // fail-open: se a consulta de duplicidade falhar, ainda tenta a Receita.
+          void preencherDadosEmpresa(digits);
+        })
+        .finally(() => setChecking(false));
+    }
+  };
+
+  const handleCpf = (v: string) => {
+    const m = maskCPF(v);
+    update("cpf", m);
+    const digits = m.replace(/\D/g, "");
+    update("empresaOk", digits.length === 11);
+    if (digits.length === 11 && !checking) {
+      setChecking(true);
+      consultarDocumentoExistente({ data: digits })
+        .then((res) => {
+          if (res.exists) {
+            update("empresaOk", false);
+            setAlertInfo({ tipo: "pf", doc: m });
+          }
+        })
+        .catch(() => {
+          // fail-open: não bloqueia o cadastro se a consulta falhar.
+        })
+        .finally(() => setChecking(false));
     }
   };
 
@@ -504,34 +705,11 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
                 className="h-11 font-mono"
                 inputMode="numeric"
               />
-              {loading && (
+              {(loading || checking) && (
                 <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
               )}
             </div>
           </Field>
-
-          <AlertDialog open={existsAlert} onOpenChange={setExistsAlert}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-warning" />
-                  CNPJ já cadastrado
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Identificamos que o CNPJ <span className="font-mono font-semibold">{data.cnpj}</span> já possui cadastro ativo na CADBRASIL.
-                  Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => update("cnpj", "")}>Informar outro CNPJ</AlertDialogCancel>
-                <AlertDialogAction asChild>
-                  <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
-                    Ir para a plataforma
-                  </a>
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
 
           {(loading || data.empresaOk) && (
             <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
@@ -563,19 +741,30 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
 
       {data.tipoPessoa === "pf" && (
         <div className="animate-fade-in grid gap-5 sm:grid-cols-2">
-          <Field label="CPF" required className="sm:col-span-2" status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
-            <Input
-              ref={cpfRef}
-              value={data.cpf}
-
-              onChange={(e) => {
-                update("cpf", maskCPF(e.target.value));
-                update("empresaOk", e.target.value.replace(/\D/g, "").length === 11);
-              }}
-              placeholder="000.000.000-00"
-              className="h-11 font-mono"
-              inputMode="numeric"
-            />
+          <Field
+            label="CPF"
+            required
+            className="sm:col-span-2"
+            status={isValidCPF(data.cpf) ? "ok" : undefined}
+            statusLabel="CPF válido"
+            error={data.cpf.replace(/\D/g, "").length === 11 && !isValidCPF(data.cpf) ? "CPF inválido" : undefined}
+          >
+            <div className="relative">
+              <Input
+                ref={cpfRef}
+                value={data.cpf}
+                onChange={(e) => handleCpf(e.target.value)}
+                placeholder="000.000.000-00"
+                className={cn(
+                  "h-11 font-mono",
+                  data.cpf.replace(/\D/g, "").length === 11 && !isValidCPF(data.cpf) && "border-destructive focus-visible:ring-destructive",
+                )}
+                inputMode="numeric"
+              />
+              {checking && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+              )}
+            </div>
           </Field>
           <Field label="Nome Completo" required className="sm:col-span-2">
             <Input
@@ -587,6 +776,39 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           </Field>
         </div>
       )}
+
+      <AlertDialog open={alertInfo !== null} onOpenChange={(open) => { if (!open) setAlertInfo(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-warning" />
+              {alertInfo?.tipo === "pf" ? "CPF já cadastrado" : "CNPJ já cadastrado"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Identificamos que o {alertInfo?.tipo === "pf" ? "CPF" : "CNPJ"}{" "}
+              <span className="font-mono font-semibold">{alertInfo?.doc}</span> já possui cadastro na CADBRASIL.
+              Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                if (alertInfo?.tipo === "pf") update("cpf", "");
+                else update("cnpj", "");
+                update("empresaOk", false);
+                setAlertInfo(null);
+              }}
+            >
+              Informar outro {alertInfo?.tipo === "pf" ? "CPF" : "CNPJ"}
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
+                Ir para a plataforma
+              </a>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -598,8 +820,23 @@ function StepResponsavel({ data, update }: { data: FormState; update: <K extends
       <Field label="Nome Completo" required className="sm:col-span-2">
         <Input value={data.nome} onChange={(e) => update("nome", e.target.value)} placeholder="Nome do responsável legal" className="h-11" />
       </Field>
-      <Field label="CPF" required status={isValidCPF(data.cpf) ? "ok" : undefined} statusLabel="CPF válido">
-        <Input value={data.cpf} onChange={(e) => update("cpf", maskCPF(e.target.value))} placeholder="000.000.000-00" className="h-11 font-mono" inputMode="numeric" />
+      <Field
+        label="CPF"
+        required
+        status={isValidCPF(data.cpf) ? "ok" : undefined}
+        statusLabel="CPF válido"
+        error={data.cpf.replace(/\D/g, "").length === 11 && !isValidCPF(data.cpf) ? "CPF inválido" : undefined}
+      >
+        <Input
+          value={data.cpf}
+          onChange={(e) => update("cpf", maskCPF(e.target.value))}
+          placeholder="000.000.000-00"
+          className={cn(
+            "h-11 font-mono",
+            data.cpf.replace(/\D/g, "").length === 11 && !isValidCPF(data.cpf) && "border-destructive focus-visible:ring-destructive",
+          )}
+          inputMode="numeric"
+        />
       </Field>
       <Field label="Data de Nascimento" required>
         <Input type="date" value={data.nascimento} onChange={(e) => update("nascimento", e.target.value)} className="h-11" />
@@ -623,17 +860,24 @@ function StepResponsavel({ data, update }: { data: FormState; update: <K extends
 function StepEndereco({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
 
-  const handleCep = (v: string) => {
+  const handleCep = async (v: string) => {
     const m = maskCEP(v);
     update("cep", m);
-    if (m.replace(/\D/g, "").length === 8) {
-      setLoading(true);
-      setTimeout(() => {
-        update("rua", "Avenida Paulista");
-        update("cidade", "São Paulo");
-        update("estado", "SP");
-        setLoading(false);
-      }, 900);
+    const cep = m.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await res.json();
+      if (d?.erro) return;
+      update("rua", d.logradouro || "");
+      update("bairro", d.bairro || "");
+      update("cidade", d.localidade || "");
+      update("estado", (d.uf || "").toUpperCase());
+    } catch {
+      /* ViaCEP indisponível — usuário preenche manualmente. */
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -645,19 +889,22 @@ function StepEndereco({ data, update }: { data: FormState; update: <K extends ke
           {loading && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />}
         </div>
       </Field>
-      <Field label="Rua / Logradouro" className="sm:col-span-4">
+      <Field label="Rua / Logradouro" required className="sm:col-span-4">
         <Input value={data.rua} onChange={(e) => update("rua", e.target.value)} className="h-11" />
       </Field>
-      <Field label="Número" className="sm:col-span-1">
+      <Field label="Número" required className="sm:col-span-1">
         <Input value={data.numero} onChange={(e) => update("numero", e.target.value)} className="h-11" />
       </Field>
-      <Field label="Complemento" className="sm:col-span-3">
+      <Field label="Complemento" className="sm:col-span-2">
         <Input value={data.complemento} onChange={(e) => update("complemento", e.target.value)} className="h-11" />
       </Field>
-      <Field label="Cidade" className="sm:col-span-3">
+      <Field label="Bairro" required className="sm:col-span-3">
+        <Input value={data.bairro} onChange={(e) => update("bairro", e.target.value)} className="h-11" />
+      </Field>
+      <Field label="Cidade" required className="sm:col-span-4">
         <Input value={data.cidade} onChange={(e) => update("cidade", e.target.value)} className="h-11" />
       </Field>
-      <Field label="UF" className="sm:col-span-1">
+      <Field label="UF" required className="sm:col-span-2">
         <Input value={data.estado} onChange={(e) => update("estado", e.target.value)} className="h-11 uppercase" maxLength={2} />
       </Field>
     </div>
@@ -865,6 +1112,219 @@ function StepPlano() {
   );
 }
 
+export function passwordRequirements(senha: string) {
+  return [
+    { label: "Mínimo de 8 caracteres", ok: senha.length >= 8 },
+    { label: "Letra maiúscula (A-Z)", ok: /[A-Z]/.test(senha) },
+    { label: "Letra minúscula (a-z)", ok: /[a-z]/.test(senha) },
+    { label: "Número (0-9)", ok: /\d/.test(senha) },
+    { label: "Símbolo (!@#$...)", ok: /[^A-Za-z0-9]/.test(senha) },
+  ];
+}
+
+export function isSenhaForte(senha: string): boolean {
+  return passwordRequirements(senha).every((r) => r.ok);
+}
+
+function StepAcesso({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const [showSenha, setShowSenha] = useState(false);
+  const [showConfirma, setShowConfirma] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  const [reqsOpen, setReqsOpen] = useState(true);
+
+  const senhasDiferentes = data.confirmarSenha.length > 0 && data.senha !== data.confirmarSenha;
+  const senhasConferem = data.confirmarSenha.length > 0 && !senhasDiferentes;
+  const reqs = passwordRequirements(data.senha);
+  const score = reqs.filter((r) => r.ok).length;
+
+  const barColor =
+    score <= 2 ? "bg-destructive" : score <= 4 ? "bg-amber-500" : "bg-success";
+  const forcaLabel =
+    data.senha.length === 0 ? "" : score <= 2 ? "Fraca" : score <= 4 ? "Média" : "Forte";
+
+  const gerar = () => {
+    const nova = gerarSenhaForte();
+    update("senha", nova);
+    update("confirmarSenha", nova);
+    setShowSenha(true);
+    setShowConfirma(true);
+  };
+
+  const copiar = async () => {
+    if (!data.senha) return;
+    try {
+      await navigator.clipboard.writeText(data.senha);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      /* clipboard indisponível */
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary-soft/40 px-4 py-3 text-sm text-primary-deep">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <p className="leading-relaxed">
+          Estas credenciais serão utilizadas para acessar o{" "}
+          <strong>Portal do Fornecedor CADBRASIL</strong> (fornecedor.cadbrasil.com.br) após a
+          aprovação do credenciamento.
+        </p>
+      </div>
+
+      <Field
+        label="E-mail de login"
+        required
+        status={isValidEmail(data.emailAcesso) ? "ok" : undefined}
+        statusLabel="E-mail válido"
+      >
+        <Input
+          value={data.emailAcesso}
+          onChange={(e) => update("emailAcesso", e.target.value)}
+          type="email"
+          placeholder="seu-email@empresa.com.br"
+          className="h-11"
+          autoComplete="username"
+        />
+      </Field>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Senha" required>
+          <div className="relative">
+            <Input
+              value={data.senha}
+              onChange={(e) => update("senha", e.target.value)}
+              type={showSenha ? "text" : "password"}
+              placeholder="Crie uma senha segura"
+              className="h-11 pr-16 font-mono"
+              autoComplete="new-password"
+            />
+            <div className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={copiar}
+                disabled={!data.senha}
+                className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                aria-label="Copiar senha"
+                title={copiado ? "Copiado!" : "Copiar senha"}
+              >
+                {copiado ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSenha((s) => !s)}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+                aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+        </Field>
+
+        <Field
+          label="Confirmar senha"
+          required
+          status={senhasConferem ? "ok" : undefined}
+          statusLabel="Senhas conferem"
+        >
+          <div className="relative">
+            <Input
+              value={data.confirmarSenha}
+              onChange={(e) => update("confirmarSenha", e.target.value)}
+              type={showConfirma ? "text" : "password"}
+              placeholder="Repita a senha"
+              className={cn("h-11 pr-10 font-mono", senhasDiferentes && "border-destructive focus-visible:ring-destructive")}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirma((s) => !s)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+              aria-label={showConfirma ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showConfirma ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </Field>
+      </div>
+
+      <p className="-mt-2 text-xs text-muted-foreground">
+        Mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos.
+      </p>
+
+      {senhasDiferentes && (
+        <p className="-mt-2 flex items-center gap-1.5 text-xs font-medium text-destructive">
+          <AlertCircle className="h-3.5 w-3.5" /> As senhas não coincidem.
+        </p>
+      )}
+
+      {/* Card: Força da senha */}
+      <div className="rounded-xl border border-border bg-muted/30">
+        <button
+          type="button"
+          onClick={() => setReqsOpen((o) => !o)}
+          className="flex w-full items-center justify-between px-4 py-3 text-left"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <ShieldCheck className="h-4 w-4 text-primary" /> Força da senha
+            {forcaLabel && (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[11px] font-bold",
+                  score <= 2 && "bg-destructive/10 text-destructive",
+                  score > 2 && score <= 4 && "bg-amber-500/10 text-amber-600",
+                  score === 5 && "bg-success/10 text-success",
+                )}
+              >
+                {forcaLabel}
+              </span>
+            )}
+          </span>
+          {reqsOpen ? (
+            <Minus className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Plus className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {reqsOpen && (
+          <div className="space-y-4 px-4 pb-4">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+              <div
+                className={cn("h-full rounded-full transition-all duration-300", barColor)}
+                style={{ width: `${(score / 5) * 100}%` }}
+              />
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {reqs.map((r) => (
+                <li
+                  key={r.label}
+                  className={cn(
+                    "flex items-center gap-2 text-sm",
+                    r.ok ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {r.ok ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                  ) : (
+                    <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+                  )}
+                  {r.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <Button type="button" variant="outline" onClick={gerar} className="gap-2">
+        <RefreshCw className="h-4 w-4" /> Gerar senha segura automaticamente
+      </Button>
+    </div>
+  );
+}
+
 function StepRevisao({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   return (
     <div className="space-y-5">
@@ -883,7 +1343,12 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
       <ReviewBlock title="Endereço">
         <ReviewItem k="CEP" v={data.cep || "—"} />
         <ReviewItem k="Endereço" v={[data.rua, data.numero, data.complemento].filter(Boolean).join(", ") || "—"} />
+        <ReviewItem k="Bairro" v={data.bairro || "—"} />
         <ReviewItem k="Cidade/UF" v={[data.cidade, data.estado].filter(Boolean).join(" / ") || "—"} />
+      </ReviewBlock>
+      <ReviewBlock title="Acesso ao Portal">
+        <ReviewItem k="E-mail de login" v={data.emailAcesso || "—"} />
+        <ReviewItem k="Senha" v={data.senha ? "•".repeat(Math.min(data.senha.length, 10)) : "—"} />
       </ReviewBlock>
       <ReviewBlock title="Licença CADBRASIL">
         <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
@@ -899,62 +1364,24 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
   );
 }
 
-/* ---------------- SUCCESS ---------------- */
-
-function SuccessScreen() {
-  return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
-      <Header />
-      <main className="mx-auto max-w-3xl px-4 py-16 lg:px-8">
-        <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-lg animate-scale-in">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/10 ring-8 ring-success/5">
-            <BadgeCheck className="h-10 w-10 text-success" />
-          </div>
-          <h2 className="mt-6 text-2xl font-bold tracking-tight text-foreground">
-            Credenciamento Recebido com Sucesso
-          </h2>
-          <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-            Seu processo foi encaminhado para análise da equipe especializada da CADBRASIL. Você receberá atualizações por email institucional.
-          </p>
-
-          <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-lg border border-border bg-primary-soft/40 px-5 py-3 text-left">
-            <FileCheck2 className="h-5 w-5 text-primary" />
-            <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Número do Processo</p>
-              <p className="font-mono text-base font-semibold text-primary-deep">CAD-2026-00001254</p>
-            </div>
-          </div>
-
-          <ul className="mx-auto mt-8 max-w-md space-y-2 text-left text-sm">
-            {["Análise documental", "Validação cadastral", "Liberação da plataforma", "Início do acompanhamento SICAF"].map((s) => (
-              <li key={s} className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" /> {s}
-              </li>
-            ))}
-          </ul>
-
-          <Button className="mt-8 h-11 bg-primary px-6 hover:bg-primary-deep">Acessar Portal do Fornecedor</Button>
-        </div>
-      </main>
-    </div>
-  );
-}
-
 /* ---------------- SHARED PRIMITIVES ---------------- */
 
-function Field({ label, required, hint, status, statusLabel, children, className }: { label: string; required?: boolean; hint?: string; status?: "ok"; statusLabel?: string; children: ReactNode; className?: string }) {
+function Field({ label, required, hint, status, statusLabel, error, children, className }: { label: string; required?: boolean; hint?: string; status?: "ok"; statusLabel?: string; error?: string; children: ReactNode; className?: string }) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
-        {status === "ok" && (
+        {error ? (
+          <span className="flex items-center gap-1 text-[11px] font-medium text-destructive">
+            <AlertCircle className="h-3 w-3" /> {error}
+          </span>
+        ) : status === "ok" ? (
           <span className="flex items-center gap-1 text-[11px] font-medium text-success">
             <CheckCircle2 className="h-3 w-3" /> {statusLabel}
           </span>
-        )}
+        ) : null}
       </div>
       {children}
       {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}

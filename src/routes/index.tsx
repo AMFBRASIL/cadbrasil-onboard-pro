@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CadastroWizard } from "@/components/cadastro/CadastroWizard";
+import { SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "CADBRASIL — Credenciamento Nacional de Fornecedores" },
       { property: "og:description", content: "Plataforma de credenciamento assistido para fornecedores do mercado público brasileiro." },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Index,
 });

@@ -9,12 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RenovacaoSicafRouteImport } from './routes/renovacao-sicaf'
+import { Route as EmpresaInaptaSicafRouteImport } from './routes/empresa-inapta-sicaf'
+import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento-sicaf'
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
+import { Route as CadastroSicafPessoaJuridicaRouteImport } from './routes/cadastro-sicaf-pessoa-juridica'
+import { Route as CadastroSicafMeiRouteImport } from './routes/cadastro-sicaf-mei'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
+  id: '/renovacao-sicaf',
+  path: '/renovacao-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresaInaptaSicafRoute = EmpresaInaptaSicafRouteImport.update({
+  id: '/empresa-inapta-sicaf',
+  path: '/empresa-inapta-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CredenciamentoSicafRoute = CredenciamentoSicafRouteImport.update({
+  id: '/credenciamento-sicaf',
+  path: '/credenciamento-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConclusaoCadastroRoute = ConclusaoCadastroRouteImport.update({
   id: '/conclusao-cadastro',
   path: '/conclusao-cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroSicafPessoaJuridicaRoute =
+  CadastroSicafPessoaJuridicaRouteImport.update({
+    id: '/cadastro-sicaf-pessoa-juridica',
+    path: '/cadastro-sicaf-pessoa-juridica',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CadastroSicafMeiRoute = CadastroSicafMeiRouteImport.update({
+  id: '/cadastro-sicaf-mei',
+  path: '/cadastro-sicaf-mei',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,37 +56,114 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
+  '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
+  '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
+  '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
+  '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
+  '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
+  '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/conclusao-cadastro'
+  fullPaths:
+    | '/'
+    | '/cadastro-sicaf-mei'
+    | '/cadastro-sicaf-pessoa-juridica'
+    | '/conclusao-cadastro'
+    | '/credenciamento-sicaf'
+    | '/empresa-inapta-sicaf'
+    | '/renovacao-sicaf'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/conclusao-cadastro'
-  id: '__root__' | '/' | '/conclusao-cadastro'
+  to:
+    | '/'
+    | '/cadastro-sicaf-mei'
+    | '/cadastro-sicaf-pessoa-juridica'
+    | '/conclusao-cadastro'
+    | '/credenciamento-sicaf'
+    | '/empresa-inapta-sicaf'
+    | '/renovacao-sicaf'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastro-sicaf-mei'
+    | '/cadastro-sicaf-pessoa-juridica'
+    | '/conclusao-cadastro'
+    | '/credenciamento-sicaf'
+    | '/empresa-inapta-sicaf'
+    | '/renovacao-sicaf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroSicafMeiRoute: typeof CadastroSicafMeiRoute
+  CadastroSicafPessoaJuridicaRoute: typeof CadastroSicafPessoaJuridicaRoute
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
+  CredenciamentoSicafRoute: typeof CredenciamentoSicafRoute
+  EmpresaInaptaSicafRoute: typeof EmpresaInaptaSicafRoute
+  RenovacaoSicafRoute: typeof RenovacaoSicafRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/renovacao-sicaf': {
+      id: '/renovacao-sicaf'
+      path: '/renovacao-sicaf'
+      fullPath: '/renovacao-sicaf'
+      preLoaderRoute: typeof RenovacaoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresa-inapta-sicaf': {
+      id: '/empresa-inapta-sicaf'
+      path: '/empresa-inapta-sicaf'
+      fullPath: '/empresa-inapta-sicaf'
+      preLoaderRoute: typeof EmpresaInaptaSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/credenciamento-sicaf': {
+      id: '/credenciamento-sicaf'
+      path: '/credenciamento-sicaf'
+      fullPath: '/credenciamento-sicaf'
+      preLoaderRoute: typeof CredenciamentoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conclusao-cadastro': {
       id: '/conclusao-cadastro'
       path: '/conclusao-cadastro'
       fullPath: '/conclusao-cadastro'
       preLoaderRoute: typeof ConclusaoCadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-sicaf-pessoa-juridica': {
+      id: '/cadastro-sicaf-pessoa-juridica'
+      path: '/cadastro-sicaf-pessoa-juridica'
+      fullPath: '/cadastro-sicaf-pessoa-juridica'
+      preLoaderRoute: typeof CadastroSicafPessoaJuridicaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-sicaf-mei': {
+      id: '/cadastro-sicaf-mei'
+      path: '/cadastro-sicaf-mei'
+      fullPath: '/cadastro-sicaf-mei'
+      preLoaderRoute: typeof CadastroSicafMeiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,8 +178,23 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroSicafMeiRoute: CadastroSicafMeiRoute,
+  CadastroSicafPessoaJuridicaRoute: CadastroSicafPessoaJuridicaRoute,
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,
+  CredenciamentoSicafRoute: CredenciamentoSicafRoute,
+  EmpresaInaptaSicafRoute: EmpresaInaptaSicafRoute,
+  RenovacaoSicafRoute: RenovacaoSicafRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
