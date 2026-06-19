@@ -6,7 +6,7 @@
 module.exports = {
   apps: [
     {
-      name: "cadbrasil-onboard",
+      name: "cadbrasilCadastro",
       cwd: __dirname,
       script: "node",
       args: "--env-file=.env .output/server/index.mjs",
