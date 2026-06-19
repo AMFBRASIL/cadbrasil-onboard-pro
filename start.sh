@@ -3,14 +3,17 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "[start.sh] cwd=$(pwd)"
+
 if [ ! -f .env ]; then
-  echo "ERRO: .env não encontrado em $(pwd)"
+  echo "[start.sh] ERRO: .env não encontrado em $(pwd)" >&2
   exit 1
 fi
 
 if [ ! -f .output/server/index.mjs ]; then
-  echo "ERRO: build não encontrado. Rode: npm run build"
+  echo "[start.sh] ERRO: build não encontrado (.output/server/index.mjs). Rode: npm run build" >&2
   exit 1
 fi
 
+echo "[start.sh] Node $(node -v) — subindo porta ${PORT:-3015}..."
 exec node --env-file=.env .output/server/index.mjs
