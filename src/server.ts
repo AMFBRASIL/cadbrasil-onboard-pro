@@ -1,3 +1,7 @@
+import { loadEnvFile } from "./lib/load-env";
+
+loadEnvFile();
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -37,8 +41,48 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+async function healthResponse(): Promise<Response> {
+  const { isDbConfigured, getPool } = await import("./lib/db-mysql");
+  const configured = isDbConfigured();
+  let connected = false;
+  let dbError: string | undefined;
+
+  if (configured) {
+    try {
+      const pool = getPool();
+      await pool.query("SELECT 1");
+      connected = true;
+    } catch (error) {
+      dbError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  const body = {
+    ok: configured && connected,
+    db: {
+      configured,
+      connected,
+      host: process.env.DB_HOST ?? null,
+      name: process.env.DB_NAME ?? null,
+      error: dbError ?? null,
+    },
+    runtime: {
+      nodeEnv: process.env.NODE_ENV ?? null,
+      port: process.env.PORT ?? null,
+      cwd: process.cwd(),
+    },
+  };
+
+  return Response.json(body, { status: body.ok ? 200 : 503 });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const { pathname } = new URL(request.url);
+    if (pathname === "/api/health") {
+      return healthResponse();
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

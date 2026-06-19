@@ -1,6 +1,6 @@
 /**
  * PM2 — produção no VPS (Linux) / aaPanel.
- * Usa "npm run start" — mais compatível que node_args no aaPanel.
+ * Usa start.sh (garante .env + build antes de subir o Node).
  */
 const path = require("path");
 
@@ -11,8 +11,8 @@ module.exports = {
     {
       name: "cadbrasilCadastro",
       cwd: ROOT,
-      script: "npm",
-      args: "run start",
+      script: path.join(ROOT, "start.sh"),
+      interpreter: "/bin/bash",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,

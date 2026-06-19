@@ -68,7 +68,8 @@ export const criarCadastro = createServerFn({ method: "POST" })
     type PoolConnection = import("mysql2/promise").PoolConnection;
 
     if (!isDbConfigured()) {
-      return { success: false, error: "Banco de dados não configurado no servidor." };
+      console.error("[criarCadastro] DB não configurado — verifique .env (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)");
+      return { success: false, error: "Banco de dados não configurado no servidor. Contate o suporte." };
     }
 
     const docDigits = data.tipoPessoa === "PJ" ? onlyDigits(data.cnpj) : onlyDigits(data.cpf);
@@ -253,6 +254,15 @@ export const criarCadastro = createServerFn({ method: "POST" })
       }
       if (isMysqlDup(e)) {
         return { success: false, error: "Dado duplicado. Verifique CPF/CNPJ ou e-mail de acesso." };
+      }
+      const code =
+        typeof e === "object" && e !== null && "code" in e ? String((e as { code: unknown }).code) : "";
+      if (code === "ECONNREFUSED" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "ER_ACCESS_DENIED_ERROR") {
+        console.error("[criarCadastro] falha de conexão MySQL:", e);
+        return {
+          success: false,
+          error: "Não foi possível conectar ao banco de dados. Tente novamente em instantes.",
+        };
       }
       console.error("[criarCadastro]", e);
       return { success: false, error: "Erro ao processar cadastro. Tente novamente." };

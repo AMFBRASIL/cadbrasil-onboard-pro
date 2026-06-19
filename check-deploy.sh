@@ -43,4 +43,8 @@ ss -tlnp | grep 3015 || echo "Porta 3015 livre"
 echo "=== PM2 ==="
 pm2 describe cadbrasilCadastro 2>/dev/null | head -30 || echo "PM2 app não existe"
 
+echo "=== HEALTH API ==="
+curl -sS http://127.0.0.1:3015/api/health || echo "Health check falhou"
+
+echo ""
 echo "=== FIM ==="
