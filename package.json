@@ -10,6 +10,7 @@
     "start": "node --env-file=.env .output/server/index.mjs",
     "deploy": "bash deploy.sh",
     "deploy:local": "bash deploy.sh --no-git",
+    "deploy:auto": "bash auto-deploy.sh",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."

@@ -1,3 +1,4 @@
 * text=auto eol=lf
 *.sh text eol=lf
 ecosystem.config.cjs text eol=lf
+auto-deploy.sh text eol=lf
