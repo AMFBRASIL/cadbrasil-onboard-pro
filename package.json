@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "start": "node --env-file=.env .output/server/index.mjs",
+    "deploy": "bash deploy.sh",
+    "deploy:local": "bash deploy.sh --no-git",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
