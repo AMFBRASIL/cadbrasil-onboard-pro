@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { TopBar, Header } from "@/components/cadastro/LayoutParts";
 import type { ConsultaProtocoloResult } from "@/lib/cadastro-consulta-types";
+import { consultarCadastroPorProtocolo } from "@/lib/cadastro-consulta";
 import { normalizeProtocolo } from "@/lib/protocolo-validation";
 import { getPortalDocumentosUrl, getPortalUrl } from "@/lib/portal";
 import { buildConclusaoStructuredData, buildSeoHead } from "@/lib/seo";
@@ -44,9 +45,19 @@ export const Route = createFileRoute("/conclusao-cadastro")({
         consulta: { found: false, protocolo: deps.protocolo, error: "Protocolo inválido." },
       };
     }
-    const { buscarCadastroPorProtocolo } = await import("@/lib/cadastro-consulta.server");
-    const consulta = await buscarCadastroPorProtocolo(normalized);
-    return { consulta };
+    try {
+      const consulta = await consultarCadastroPorProtocolo({ data: normalized });
+      return { consulta };
+    } catch (e) {
+      console.error("[conclusao-cadastro loader]", e);
+      return {
+        consulta: {
+          found: false,
+          protocolo: deps.protocolo,
+          error: "Erro ao consultar o protocolo.",
+        },
+      };
+    }
   },
   head: ({ loaderData }) => {
     const base = buildSeoHead({
