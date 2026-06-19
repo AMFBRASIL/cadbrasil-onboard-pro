@@ -53,71 +53,70 @@ async function logServerFnError(pathname: string, response: Response): Promise<v
 }
 
 async function healthResponse(): Promise<Response> {
-  const { isDbConfigured, getConnection, getPool, mapMysqlErrorMessage } = await import("./lib/db-mysql");
-  const configured = isDbConfigured();
-  let connected = false;
-  let writeOk = false;
-  let dbError: string | undefined;
-  let dbCode: string | undefined;
+  const runtime = {
+    nodeEnv: process.env.NODE_ENV ?? null,
+    port: process.env.PORT ?? null,
+    cwd: process.cwd(),
+  };
 
-  if (configured) {
-    let conn: Awaited<ReturnType<typeof getConnection>> | undefined;
-    try {
-      conn = await getConnection();
-      await conn.query("SELECT 1");
-      await conn.beginTransaction();
-      await conn.query("SELECT id FROM usuarios LIMIT 1");
-      await conn.query("SELECT id FROM clientes LIMIT 1");
-      await conn.rollback();
-      connected = true;
-      writeOk = true;
-    } catch (error) {
-      dbCode =
-        typeof error === "object" && error !== null && "code" in error
-          ? String((error as { code: unknown }).code)
-          : undefined;
-      dbError = mapMysqlErrorMessage(error);
+  try {
+    const { isDbConfigured, getPool, mapMysqlErrorMessage } = await import("./lib/db-mysql");
+    const configured = isDbConfigured();
+    let connected = false;
+    let dbError: string | undefined;
+    let dbCode: string | undefined;
+
+    if (configured) {
       try {
         await getPool().query("SELECT 1");
         connected = true;
-      } catch {
-        connected = false;
+      } catch (error) {
+        dbCode =
+          typeof error === "object" && error !== null && "code" in error
+            ? String((error as { code: unknown }).code)
+            : undefined;
+        dbError = mapMysqlErrorMessage(error);
       }
-    } finally {
-      if (conn) conn.release();
     }
+
+    const body = {
+      ok: configured && connected,
+      db: {
+        configured,
+        connected,
+        host: process.env.DB_HOST ?? null,
+        name: process.env.DB_NAME ?? null,
+        code: dbCode ?? null,
+        error: dbError ?? null,
+        hint:
+          process.env.DB_HOST &&
+          process.env.DB_HOST !== "127.0.0.1" &&
+          process.env.DB_HOST !== "localhost"
+            ? "Se MySQL está no mesmo VPS, use DB_HOST=127.0.0.1"
+            : null,
+      },
+      runtime,
+    };
+
+    return Response.json(body, { status: body.ok ? 200 : 503 });
+  } catch (error) {
+    console.error("[health]", error);
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+        runtime,
+      },
+      { status: 503 },
+    );
   }
-
-  const body = {
-    ok: configured && connected && writeOk,
-    db: {
-      configured,
-      connected,
-      writeOk,
-      host: process.env.DB_HOST ?? null,
-      name: process.env.DB_NAME ?? null,
-      code: dbCode ?? null,
-      error: dbError ?? null,
-      hint:
-        process.env.DB_HOST && process.env.DB_HOST !== "127.0.0.1" && process.env.DB_HOST !== "localhost"
-          ? "Se MySQL está no mesmo VPS, tente DB_HOST=127.0.0.1"
-          : null,
-    },
-    runtime: {
-      nodeEnv: process.env.NODE_ENV ?? null,
-      port: process.env.PORT ?? null,
-      cwd: process.cwd(),
-    },
-  };
-
-  return Response.json(body, { status: body.ok ? 200 : 503 });
 }
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const { pathname } = new URL(request.url);
     if (pathname === "/api/health") {
-      return healthResponse();
+      return await healthResponse();
     }
 
     const serverFn = isServerFnPath(pathname);

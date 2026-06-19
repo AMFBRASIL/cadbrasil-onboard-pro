@@ -111,18 +111,28 @@ pm2 status cadbrasilCadastro || true
 HEALTH=$(curl -sS --max-time 10 http://127.0.0.1:3015/api/health 2>/dev/null || echo '{"ok":false}')
 echo "$HEALTH"
 
+# Aceita: ok:true OU JSON de diagnóstico (503) — mas NÃO erro Nitro 500
+if echo "$HEALTH" | grep -q '"error":true'; then
+  warn "Servidor respondeu erro 500 — PM2 pode estar com build antigo. Rode: pm2 restart ecosystem.config.cjs"
+  DEPLOY_OK=false
+elif echo "$HEALTH" | grep -q '"ok":true'; then
+  echo -e "${GREEN}Deploy concluído — backend e banco OK!${NC}"
+elif echo "$HEALTH" | grep -q '"configured"'; then
+  echo -e "${YELLOW}Deploy aplicado (git+build+PM2), mas banco com problema.${NC}"
+  echo "  Edite .env → DB_HOST=127.0.0.1 (se MySQL é local) e rode: pm2 restart ecosystem.config.cjs"
+else
+  warn "Resposta inesperada do health — verifique pm2 logs"
+  DEPLOY_OK=false
+fi
+
 echo ""
 echo "  Commit em produção: $(git rev-parse --short HEAD)"
 echo "  Build:              .output/server/index.mjs"
+echo "  Site:               https://cadastro.cadbrasil.com.br"
 
-if echo "$HEALTH" | grep -q '"ok":true'; then
-  echo -e "${GREEN}Deploy concluído com sucesso!${NC}"
-elif [ "$DEPLOY_OK" = false ]; then
-  echo -e "${YELLOW}Deploy aplicado (git+build+PM2), mas banco com problema no .env${NC}"
-  echo "  Corrija DB_HOST=127.0.0.1 no .env e rode: pm2 restart ecosystem.config.cjs"
-  exit 0
-else
-  warn "Health check falhou — git/build/PM2 foram aplicados. Verifique logs:"
-  echo "  pm2 logs cadbrasilCadastro --lines 50"
-  exit 0
+if [ "$DEPLOY_OK" = false ]; then
+  echo ""
+  echo "  Diagnóstico:"
+  echo "    pm2 logs cadbrasilCadastro --lines 30 --nostream"
+  echo "    curl -s http://127.0.0.1:3015/api/health"
 fi
