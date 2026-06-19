@@ -1,3 +1,6 @@
+import { GOOGLE_ADS_ID } from "./analytics-ids";
+import { GTM_EVENTS } from "./gtm";
+
 export interface UtmData {
   utm_source: string;
   utm_medium: string;
@@ -27,16 +30,13 @@ declare global {
 const STORAGE_KEY = "cadbrasil_utm";
 const SESSION_ENGAGEMENT_KEY = "cadbrasil_ads_engagement_fired";
 
-/** ID Google Ads (mesmo configurado no __root.tsx — gtag config). */
-const GOOGLE_ADS_AW_ID = "AW-16460586067";
-
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 function resolveEngagementSendTo(): string | undefined {
   const full = env.VITE_GADS_ENGAGEMENT_SEND_TO?.trim();
   if (full) return full;
   const label = env.VITE_GADS_ENGAGEMENT_LABEL?.trim();
-  if (label) return `${GOOGLE_ADS_AW_ID}/${label}`;
+  if (label) return `${GOOGLE_ADS_ID}/${label}`;
   return undefined;
 }
 
@@ -172,11 +172,11 @@ export function trackGoogleAdsEngagement(extraParams?: Record<string, unknown>):
     };
 
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("event", "ads_conversion_engagement", gtagParams);
+      window.gtag("event", GTM_EVENTS.ADS_ENGAGEMENT, gtagParams);
     }
 
     if (typeof window !== "undefined" && Array.isArray(window.dataLayer)) {
-      window.dataLayer.push({ event: "ads_conversion_engagement", ...gtagParams });
+      window.dataLayer.push({ event: GTM_EVENTS.ADS_ENGAGEMENT, ...gtagParams });
     }
   } catch (e) {
     console.warn("[Tracking] ads_conversion_engagement:", e);
@@ -216,6 +216,77 @@ export function scheduleGoogleAdsEngagementOncePerSession(): void {
  *  2. Google Tag Manager → dataLayer.push
  *  3. Microsoft Ads → uetq.push
  */
+const CONCLUSAO_TRACKING_PREFIX = "cadbrasil_conclusao_tracked_";
+
+/** Envia evento genérico ao dataLayer (GTM) sem depender do gtag. */
+export function pushDataLayerEvent(
+  event: string,
+  params?: Record<string, unknown>,
+): void {
+  if (typeof window === "undefined" || !Array.isArray(window.dataLayer)) return;
+  try {
+    window.dataLayer.push({ event, ...params });
+  } catch (e) {
+    console.warn("[Tracking] dataLayer.push:", e);
+  }
+}
+
+/**
+ * Eventos da página de conclusão (funnel pós-cadastro).
+ * Dispara uma vez por protocolo/sessão para evitar duplicar em refresh.
+ */
+export function trackConclusaoCadastroView(params: {
+  protocolo: string;
+  razaoSocial?: string;
+  tipoDocumento?: string;
+  sicafStatus?: string;
+}): void {
+  if (typeof window === "undefined") return;
+
+  const key = `${CONCLUSAO_TRACKING_PREFIX}${params.protocolo}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* ignore */
+  }
+
+  const utm = getUtmParams();
+
+  pushDataLayerEvent(GTM_EVENTS.CONCLUSAO_VIEW, {
+    page_path: "/conclusao-cadastro",
+    page_title: "Credenciamento Recebido — CADBRASIL",
+    protocolo: params.protocolo,
+    razao_social: params.razaoSocial ?? "",
+    tipo_documento: params.tipoDocumento ?? "",
+    sicaf_status: params.sicafStatus ?? "",
+    utm_source: utm?.utm_source ?? "",
+    utm_medium: utm?.utm_medium ?? "",
+    utm_campaign: utm?.utm_campaign ?? "",
+    gclid: utm?.gclid ?? "",
+  });
+
+  pushDataLayerEvent(GTM_EVENTS.FUNNEL_STEP, {
+    funnel_name: "cadastro_sicaf",
+    funnel_step: "conclusao",
+    funnel_step_name: "Credenciamento protocolado",
+    protocolo: params.protocolo,
+  });
+
+  // Reforço de conversão para GTM/Ads (cadastro_concluido já dispara no wizard).
+  trackConversion(GTM_EVENTS.CONCLUSAO_CONFIRMADA, 985, {
+    protocolo: params.protocolo,
+    transaction_id: params.protocolo,
+  });
+}
+
+export function trackPortalClick(origem: "cta_principal" | "cta_secundario" | "link_texto"): void {
+  pushDataLayerEvent(GTM_EVENTS.PORTAL_CLICK, {
+    origem,
+    destino: "fornecedor.cadbrasil.com.br",
+  });
+}
+
 export function trackConversion(
   eventName: string,
   value?: number,
@@ -226,7 +297,7 @@ export function trackConversion(
 
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
       const gtagParams: Record<string, unknown> = {
-        send_to: GOOGLE_ADS_AW_ID,
+        send_to: GOOGLE_ADS_ID,
         ...(value !== undefined && { value, currency: "BRL" }),
         ...(utm?.utm_term && { keyword: utm.utm_term }),
         ...(utm?.utm_campaign && { campaign: utm.utm_campaign }),
@@ -247,6 +318,7 @@ export function trackConversion(
         utmTerm: utm?.utm_term || "",
         utmContent: utm?.utm_content || "",
         gclid: utm?.gclid || "",
+        ...extraParams,
       });
     }
 

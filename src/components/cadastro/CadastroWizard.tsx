@@ -52,6 +52,7 @@ import { consultarCnpj } from "@/lib/cnpj-consulta";
 import { criarCadastro } from "@/lib/cadastro";
 import { gerarSenhaForte } from "@/lib/senha";
 import { getTrackingForPayload, trackConversion } from "@/lib/tracking";
+import { GTM_EVENTS } from "@/lib/gtm";
 import type { CnaeItem } from "@/lib/cnae";
 
 type StepKey =
@@ -289,7 +290,7 @@ export function CadastroWizard() {
         setSubmitError(res.error);
         return;
       }
-      trackConversion("cadastro_concluido", 985, { protocolo: res.protocolo });
+      trackConversion(GTM_EVENTS.CADASTRO_CONCLUIDO, 985, { protocolo: res.protocolo });
       await navigate({ to: "/conclusao-cadastro", search: { protocolo: res.protocolo } });
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err ?? "");

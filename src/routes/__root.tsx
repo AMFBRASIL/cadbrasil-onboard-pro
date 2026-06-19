@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,18 +12,17 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { captureUtmParams } from "../lib/tracking";
-
-const SITE_URL = "https://cadastro.cadbrasil.com.br";
-const SITE_NAME = "CADBRASIL";
-const SITE_DESCRIPTION =
-  "Cadastre sua empresa na CADBRASIL e fale com especialistas em SICAF e licitações públicas. Processo rápido, seguro, com suporte humano e conformidade LGPD.";
-
-/* IDs de marketing (mesmos do sistema legado) */
-const GTM_ID = "GTM-TRVTMS6M";
-const GOOGLE_ADS_ID = "AW-16460586067";
-const GOOGLE_TAG_ID = "GT-KTPDP2TV";
-const BING_UET_ID = "343231769";
+import { captureUtmParams, scheduleGoogleAdsEngagementOncePerSession } from "../lib/tracking";
+import {
+  BING_UET_ID,
+  GOOGLE_ADS_ID,
+  GOOGLE_TAG_ID,
+  GTM_CONTAINER_ID,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "../lib/analytics-ids";
+import { trackVirtualPageView } from "../lib/gtm";
 
 function NotFoundComponent() {
   return (
@@ -123,6 +123,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "LLMs.txt" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -140,6 +141,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function MarketingTags() {
   return (
     <>
+      {/* Bootstrap dataLayer antes do GTM */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'gtm.bootstrap',site_name:'${SITE_NAME}',site_url:'${SITE_URL}',gtm_container:'${GTM_CONTAINER_ID}'});`,
+        }}
+      />
+
       {/* Google Tag Manager */}
       <script
         dangerouslySetInnerHTML={{
@@ -147,7 +155,7 @@ function MarketingTags() {
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');`,
+})(window,document,'script','dataLayer','${GTM_CONTAINER_ID}');`,
         }}
       />
 
@@ -223,7 +231,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_CONTAINER_ID}`}
             height="0"
             width="0"
             style={{ display: "none", visibility: "hidden" }}
@@ -237,16 +245,28 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function GtmSpaTracker() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+
+  useEffect(() => {
+    trackVirtualPageView(pathname + searchStr);
+  }, [pathname, searchStr]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // Captura parâmetros de campanha (UTM/gclid/msclkid) o quanto antes.
   useEffect(() => {
     captureUtmParams();
+    scheduleGoogleAdsEngagementOncePerSession();
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
+      <GtmSpaTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

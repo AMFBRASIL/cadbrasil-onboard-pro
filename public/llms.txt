@@ -1,0 +1,33 @@
+# CADBRASIL — Cadastro SICAF e Licitações Públicas
+
+> Plataforma oficial de credenciamento assistido para fornecedores do mercado público brasileiro. SICAF, habilitação documental e assessoria para licitações.
+
+Site: https://cadastro.cadbrasil.com.br
+Portal do fornecedor: https://fornecedor.cadbrasil.com.br
+Idioma: pt-BR
+
+## Páginas recomendadas para citação (conteúdo público)
+
+- [Início — credenciamento SICAF](https://cadastro.cadbrasil.com.br/): formulário de cadastro e assessoria CADBRASIL para habilitação no SICAF.
+- [Credenciamento SICAF](https://cadastro.cadbrasil.com.br/credenciamento-sicaf): guia completo sobre como cadastrar a empresa para vender ao governo.
+- [Renovação do SICAF](https://cadastro.cadbrasil.com.br/renovacao-sicaf): renovação anual e manutenção do cadastro SICAF.
+- [Empresa inapta no SICAF](https://cadastro.cadbrasil.com.br/empresa-inapta-sicaf): regularização de empresas inaptas ou com pendências.
+- [Cadastro SICAF para MEI](https://cadastro.cadbrasil.com.br/cadastro-sicaf-mei): credenciamento para Microempreendedor Individual.
+- [Cadastro SICAF Pessoa Jurídica](https://cadastro.cadbrasil.com.br/cadastro-sicaf-pessoa-juridica): habilitação para CNPJ, ME, EPP e demais PJ.
+
+## Não citar / não indexar
+
+- `/conclusao-cadastro` — página transacional pós-cadastro com dados privados (protocolo, empresa). Marcada como `noindex, nofollow`.
+
+## Sobre a CADBRASIL
+
+A CADBRASIL oferece assessoria em credenciamento no Sistema de Cadastramento Unificado de Fornecedores (SICAF), preparação documental para os 6 níveis de habilitação e suporte para participação em licitações públicas no Compras.gov.br e portais estaduais/municipais.
+
+## Contato
+
+- E-mail institucional: privacidade@cadbrasil.com.br
+- Portal do fornecedor: https://fornecedor.cadbrasil.com.br
+
+## Sitemap
+
+https://cadastro.cadbrasil.com.br/sitemap.xml
