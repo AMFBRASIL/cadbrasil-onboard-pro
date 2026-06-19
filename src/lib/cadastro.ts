@@ -194,7 +194,7 @@ async function executarCriarCadastro(rawInput: unknown): Promise<CriarCadastroRe
   }
   const data = parsed.data;
 
-  const { getPool, isDbConfigured } = await import("./db-mysql");
+  const { getConnection, isDbConfigured, mapMysqlErrorMessage } = await import("./db-mysql");
   const { gerarProtocoloCadbrasil } = await import("./protocolo");
   const { principalCnaeCodigo } = await import("./cnae");
   const bcrypt = (await import("bcryptjs")).default;
@@ -217,12 +217,12 @@ async function executarCriarCadastro(rawInput: unknown): Promise<CriarCadastroRe
   const cnaePrincipal = data.tipoPessoa === "PJ" ? principalCnaeCodigo(data.cnaes) : null;
   const protocolo = gerarProtocoloCadbrasil();
   const observacoes = montarObservacoes(protocolo, data);
+  const senhaHash = await bcrypt.hash(data.senha, 10);
 
-  const pool = getPool();
   let conn: PoolConnection | undefined;
 
   try {
-    conn = await pool.getConnection();
+    conn = await getConnection();
     await conn.beginTransaction();
 
     const [dupDoc] = await conn.query<RowDataPacket[]>(
@@ -255,7 +255,6 @@ async function executarCriarCadastro(rawInput: unknown): Promise<CriarCadastroRe
       return { success: false, error: "Perfil de acesso do cliente não configurado na base." };
     }
 
-    const senhaHash = await bcrypt.hash(data.senha, 10);
     const [uRes] = await conn.execute<ResultSetHeader>(
       `INSERT INTO usuarios (nome, email, senha_hash, telefone, avatar_iniciais, departamento, perfil_id, status)
        VALUES (?,?,?,?,?,?,?,?)`,
@@ -356,7 +355,8 @@ async function executarCriarCadastro(rawInput: unknown): Promise<CriarCadastroRe
     );
 
     await conn.commit();
-    await insertTrackingSessao(pool, idCliente, idUsuario, data.tracking ?? {});
+    const { getPool } = await import("./db-mysql");
+    await insertTrackingSessao(getPool(), idCliente, idUsuario, data.tracking ?? {});
 
     void import("./email")
       .then(({ dispararEmailsPosCadastro }) =>
@@ -390,15 +390,8 @@ async function executarCriarCadastro(rawInput: unknown): Promise<CriarCadastroRe
       typeof e === "object" && e !== null && "sqlMessage" in e
         ? String((e as { sqlMessage: unknown }).sqlMessage)
         : "";
-    if (code === "ECONNREFUSED" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "ER_ACCESS_DENIED_ERROR") {
-      console.error("[criarCadastro] falha de conexão MySQL:", e);
-      return {
-        success: false,
-        error: "Não foi possível conectar ao banco de dados. Tente novamente em instantes.",
-      };
-    }
-    console.error("[criarCadastro]", sqlMsg || e);
-    return { success: false, error: "Erro ao processar cadastro. Tente novamente." };
+    console.error("[criarCadastro]", code, sqlMsg || e);
+    return { success: false, error: mapMysqlErrorMessage(e) };
   } finally {
     if (conn) conn.release();
   }

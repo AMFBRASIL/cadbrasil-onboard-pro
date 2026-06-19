@@ -53,29 +53,55 @@ async function logServerFnError(pathname: string, response: Response): Promise<v
 }
 
 async function healthResponse(): Promise<Response> {
-  const { isDbConfigured, getPool } = await import("./lib/db-mysql");
+  const { isDbConfigured, getConnection, getPool, mapMysqlErrorMessage } = await import("./lib/db-mysql");
   const configured = isDbConfigured();
   let connected = false;
+  let writeOk = false;
   let dbError: string | undefined;
+  let dbCode: string | undefined;
 
   if (configured) {
+    let conn: Awaited<ReturnType<typeof getConnection>> | undefined;
     try {
-      const pool = getPool();
-      await pool.query("SELECT 1");
+      conn = await getConnection();
+      await conn.query("SELECT 1");
+      await conn.beginTransaction();
+      await conn.query("SELECT id FROM usuarios LIMIT 1");
+      await conn.query("SELECT id FROM clientes LIMIT 1");
+      await conn.rollback();
       connected = true;
+      writeOk = true;
     } catch (error) {
-      dbError = error instanceof Error ? error.message : String(error);
+      dbCode =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code: unknown }).code)
+          : undefined;
+      dbError = mapMysqlErrorMessage(error);
+      try {
+        await getPool().query("SELECT 1");
+        connected = true;
+      } catch {
+        connected = false;
+      }
+    } finally {
+      if (conn) conn.release();
     }
   }
 
   const body = {
-    ok: configured && connected,
+    ok: configured && connected && writeOk,
     db: {
       configured,
       connected,
+      writeOk,
       host: process.env.DB_HOST ?? null,
       name: process.env.DB_NAME ?? null,
+      code: dbCode ?? null,
       error: dbError ?? null,
+      hint:
+        process.env.DB_HOST && process.env.DB_HOST !== "127.0.0.1" && process.env.DB_HOST !== "localhost"
+          ? "Se MySQL está no mesmo VPS, tente DB_HOST=127.0.0.1"
+          : null,
     },
     runtime: {
       nodeEnv: process.env.NODE_ENV ?? null,
