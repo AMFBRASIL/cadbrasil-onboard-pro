@@ -36,18 +36,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { TopBar, Header } from "./LayoutParts";
+import { ClienteExistenteModal } from "./ClienteExistenteModal";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { consultarDocumentoExistente } from "@/lib/cliente-consulta";
+import { consultarDocumentoExistente, type ClienteExistenteDetalhe } from "@/lib/cliente-consulta";
 import { consultarCnpj } from "@/lib/cnpj-consulta";
 import { criarCadastro } from "@/lib/cadastro";
 import { gerarSenhaForte } from "@/lib/senha";
@@ -521,7 +512,12 @@ function Timeline({ current, onJump }: { current: number; onJump: (i: number) =>
 function StepEmpresa({ data, update }: { data: FormState; update: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [alertInfo, setAlertInfo] = useState<{ tipo: "pj" | "pf"; doc: string } | null>(null);
+  const [clienteExistenteModal, setClienteExistenteModal] = useState<{
+    tipo: "pj" | "pf";
+    doc: string;
+    loading: boolean;
+    cliente: ClienteExistenteDetalhe | null;
+  } | null>(null);
   const cnpjRef = useRef<HTMLInputElement>(null);
   const cpfRef = useRef<HTMLInputElement>(null);
 
@@ -580,7 +576,12 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
         .then((res) => {
           if (res.exists) {
             update("empresaOk", false);
-            setAlertInfo({ tipo: "pj", doc: m });
+            setClienteExistenteModal({
+              tipo: "pj",
+              doc: m,
+              loading: false,
+              cliente: res.cliente ?? null,
+            });
             return;
           }
           void preencherDadosEmpresa(digits);
@@ -604,7 +605,12 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
         .then((res) => {
           if (res.exists) {
             update("empresaOk", false);
-            setAlertInfo({ tipo: "pf", doc: m });
+            setClienteExistenteModal({
+              tipo: "pf",
+              doc: m,
+              loading: false,
+              cliente: res.cliente ?? null,
+            });
           }
         })
         .catch(() => {
@@ -781,38 +787,20 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
         </div>
       )}
 
-      <AlertDialog open={alertInfo !== null} onOpenChange={(open) => { if (!open) setAlertInfo(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-warning" />
-              {alertInfo?.tipo === "pf" ? "CPF já cadastrado" : "CNPJ já cadastrado"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Identificamos que o {alertInfo?.tipo === "pf" ? "CPF" : "CNPJ"}{" "}
-              <span className="font-mono font-semibold">{alertInfo?.doc}</span> já possui cadastro na CADBRASIL.
-              Para acessar sua conta, gerenciar documentos e acompanhar oportunidades, utilize a plataforma do fornecedor.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                if (alertInfo?.tipo === "pf") update("cpf", "");
-                else update("cnpj", "");
-                update("empresaOk", false);
-                setAlertInfo(null);
-              }}
-            >
-              Informar outro {alertInfo?.tipo === "pf" ? "CPF" : "CNPJ"}
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <a href="https://fornecedor.cadbrasil.com.br" target="_blank" rel="noopener noreferrer">
-                Ir para a plataforma
-              </a>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ClienteExistenteModal
+        open={clienteExistenteModal !== null}
+        loading={clienteExistenteModal?.loading}
+        cliente={clienteExistenteModal?.cliente ?? null}
+        documentoMasked={clienteExistenteModal?.doc ?? ""}
+        tipo={clienteExistenteModal?.tipo ?? "pj"}
+        onClose={() => setClienteExistenteModal(null)}
+        onInformarOutro={() => {
+          if (clienteExistenteModal?.tipo === "pf") update("cpf", "");
+          else update("cnpj", "");
+          update("empresaOk", false);
+          setClienteExistenteModal(null);
+        }}
+      />
     </div>
   );
 }

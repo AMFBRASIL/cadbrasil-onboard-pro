@@ -1,38 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { ConsultaDocumentoResult } from "./cliente-consulta-types";
 
-/** Mantém apenas dígitos (remove máscara de CPF/CNPJ). */
+export type {
+  ClienteExistenteDetalhe,
+  ConsultaDocumentoResult,
+  EtapaSicaf,
+  EtapaSicafStatus,
+} from "./cliente-consulta-types";
+
 function onlyDigits(value: string): string {
   return (value || "").replace(/\D/g, "");
 }
 
 /**
- * Expressão SQL que normaliza a coluna `documento` (gravada com máscara)
- * removendo pontos, barras, hífens, espaços e sublinhados — para comparar com os
- * dígitos puros informados. Mesma regra usada no sistema legado.
- */
-function docNormalizedExpr(column: string): string {
-  return `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${column}, '.', ''), '/', ''), '-', ''), ' ', ''), '_', '')`;
-}
-
-export type ConsultaDocumentoResult = {
-  /** true se o CPF/CNPJ já existe na base de clientes. */
-  exists: boolean;
-  /** false quando o banco não está configurado no servidor. */
-  configured: boolean;
-  /** documento (somente dígitos) que foi consultado. */
-  documento: string;
-};
-
-/**
- * Server function (SOMENTE LEITURA) que verifica se um CPF (11 díg.) ou
- * CNPJ (14 díg.) já está cadastrado na base de clientes.
- *
- * Comportamento "fail-open": se o banco não estiver configurado ou ocorrer erro,
- * retorna `exists: false` para NÃO bloquear o usuário no formulário. O alerta de
- * "já cadastrado" só aparece quando há confirmação positiva no banco.
- *
- * O acesso ao banco (`mysql2`, Node-only) é carregado dinamicamente dentro do
- * handler para nunca vazar para o bundle do client.
+ * Verifica se CPF/CNPJ já existe e, quando existir, retorna o status das etapas SICAF.
  */
 export const consultarDocumentoExistente = createServerFn({ method: "GET" })
   .inputValidator((documento: string) => {
@@ -43,23 +24,6 @@ export const consultarDocumentoExistente = createServerFn({ method: "GET" })
     return digits;
   })
   .handler(async ({ data: documento }): Promise<ConsultaDocumentoResult> => {
-    const { getPool, isDbConfigured } = await import("./db-mysql");
-
-    if (!isDbConfigured()) {
-      return { exists: false, configured: false, documento };
-    }
-
-    try {
-      const pool = getPool();
-      const [rows] = await pool.query(
-        `SELECT id FROM clientes WHERE ${docNormalizedExpr("documento")} = ? LIMIT 1`,
-        [documento],
-      );
-      const exists = Array.isArray(rows) && rows.length > 0;
-      return { exists, configured: true, documento };
-    } catch (error) {
-      console.error("[consultarDocumentoExistente]", error);
-      // fail-open: não bloqueia o cadastro se a consulta falhar.
-      return { exists: false, configured: true, documento };
-    }
+    const { buscarClientePorDocumento } = await import("./cliente-consulta.server");
+    return buscarClientePorDocumento(documento);
   });
