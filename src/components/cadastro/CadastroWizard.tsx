@@ -33,7 +33,7 @@ import {
   RefreshCw,
   Minus,
   Plus,
-  Upload,
+  Info,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { TopBar, Header } from "./LayoutParts";
@@ -45,7 +45,6 @@ import { criarCadastro } from "@/lib/cadastro";
 import { gerarSenhaForte } from "@/lib/senha";
 import { getTrackingForPayload, trackConversion } from "@/lib/tracking";
 import { GTM_EVENTS } from "@/lib/gtm";
-import { getPortalDocumentosUrl } from "@/lib/portal";
 import type { CnaeItem } from "@/lib/cnae";
 
 type StepKey =
@@ -411,7 +410,7 @@ function stepSubtitle(k: StepKey) {
     case "empresa": return "Informe o CNPJ para consultarmos automaticamente os dados oficiais da Receita Federal.";
     case "responsavel": return "Dados do representante legal responsável pelo credenciamento da empresa.";
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
-    case "diagnostico": return "Análise preliminar dos requisitos SICAF. Após concluir o cadastro e receber suas credenciais, o envio dos documentos é feito no Portal do Fornecedor.";
+    case "diagnostico": return "Pré-análise informativa dos requisitos SICAF. Nenhum documento é enviado nesta etapa.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
     case "acesso": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
@@ -906,82 +905,18 @@ function StepEndereco({ data, update }: { data: FormState; update: <K extends ke
 }
 
 function StepDiagnostico({ data }: { data: FormState }) {
-  const portalUrl = getPortalDocumentosUrl();
   const items = [
-    { title: "Regularidade Fiscal", desc: "Verificação de certidões federais, estaduais e municipais.", status: "apto" as const, ref: "Lei 14.133/21, art. 68" },
-    { title: "Capacidade Jurídica", desc: "Análise do contrato social e poderes do representante.", status: "apto" as const, ref: "Art. 66" },
+    { title: "Regularidade Fiscal", desc: "Certidões federais, estaduais e municipais exigidas para habilitação.", status: "apto" as const, ref: "Lei 14.133/21, art. 68" },
+    { title: "Capacidade Jurídica", desc: "Contrato social e poderes do representante legal.", status: "apto" as const, ref: "Art. 66" },
     { title: "Qualificação Econômico-Financeira", desc: "Balanço patrimonial e índices contábeis.", status: "pendente" as const, ref: "Art. 69" },
     { title: "Qualificação Técnica", desc: "Atestados de capacidade técnica e registros profissionais.", status: "correcao" as const, ref: "Art. 67" },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-primary-soft/30 px-4 py-3 text-sm text-primary-deep">
-        Diagnóstico preliminar gerado automaticamente para o CNPJ {data.cnpj || "—"} com base na Lei nº 14.133/2021.
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary-soft/50 to-card shadow-sm">
-        <div className="border-b border-primary/15 bg-primary-deep/5 px-5 py-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md">
-              <Upload className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-                Documentação SICAF
-              </p>
-              <h3 className="mt-0.5 text-base font-bold text-foreground">
-                Envio de documentos no Portal do Fornecedor
-              </h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Os documentos de habilitação <strong className="font-medium text-foreground">não são enviados nesta etapa</strong>.
-                Após concluir o cadastro e receber suas <strong className="font-medium text-foreground">credenciais de acesso</strong>{" "}
-                (e-mail e senha criados na etapa &quot;Acesso&quot;), você deverá acessar o Portal do Fornecedor CADBRASIL
-                para enviar contrato social, certidões e demais documentos exigidos pelo SICAF.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-4 px-5 py-4 sm:grid-cols-3">
-          {[
-            {
-              icon: BadgeCheck,
-              title: "1. Conclua o cadastro",
-              text: "Finalize as etapas Licença, Acesso e Revisão neste formulário.",
-            },
-            {
-              icon: KeyRound,
-              title: "2. Receba suas credenciais",
-              text: "Você receberá por e-mail o protocolo e os dados para entrar no portal.",
-            },
-            {
-              icon: FileUp,
-              title: "3. Envie no portal",
-              text: "Faça login e envie a documentação para análise da equipe CADBRASIL.",
-            },
-          ].map((step) => {
-            const StepIcon = step.icon;
-            return (
-            <div key={step.title} className="rounded-lg border border-border bg-background/80 p-4">
-              <StepIcon className="h-5 w-5 text-primary" />
-              <p className="mt-2 text-sm font-semibold text-foreground">{step.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.text}</p>
-            </div>
-            );
-          })}
-        </div>
-        <div className="flex flex-col items-stretch gap-2 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-            Ambiente seguro · análise em até 24 horas úteis após o envio
-          </p>
-          <Button asChild variant="outline" size="sm" className="shrink-0 border-primary/30 bg-background">
-            <a href={portalUrl} target="_blank" rel="noopener noreferrer">
-              Conhecer o Portal do Fornecedor
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </a>
-          </Button>
-        </div>
+    <div className="space-y-5">
+      <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        Pré-análise automática para o CNPJ <strong className="font-medium text-foreground">{data.cnpj || "—"}</strong>.
+        Os cards abaixo são <strong className="font-medium text-foreground">somente informativos</strong> — não é necessário enviar documentos nesta etapa.
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -995,26 +930,37 @@ function StepDiagnostico({ data }: { data: FormState }) {
 
 function DiagnosticoCard({ title, desc, status, ref }: { title: string; desc: string; status: "apto" | "pendente" | "correcao"; ref: string }) {
   const map = {
-    apto: { label: "Apto", dot: "bg-success", border: "border-success/40", text: "text-success" },
-    pendente: { label: "Pendente", dot: "bg-warning", border: "border-warning/40", text: "text-warning-foreground" },
-    correcao: { label: "Necessita Correção", dot: "bg-destructive", border: "border-destructive/40", text: "text-destructive" },
+    apto: { label: "Indicativo favorável", dot: "bg-success", border: "border-success/30", text: "text-success", bg: "bg-success/5" },
+    pendente: { label: "A confirmar no portal", dot: "bg-warning", border: "border-warning/30", text: "text-warning-foreground", bg: "bg-warning/5" },
+    correcao: { label: "A confirmar no portal", dot: "bg-muted-foreground/50", border: "border-border", text: "text-muted-foreground", bg: "bg-muted/30" },
   }[status];
-  const Icon = status === "apto" ? CheckCircle2 : status === "pendente" ? AlertCircle : Circle;
+  const Icon = status === "apto" ? CheckCircle2 : Info;
   return (
-    <div className={cn("rounded-lg border bg-card p-5 transition-shadow hover:shadow-md", map.border)}>
+    <div className={cn("rounded-lg border p-5", map.border, map.bg)}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+            <Badge variant="secondary" className="text-[10px] font-normal uppercase tracking-wide">
+              Somente leitura
+            </Badge>
+          </div>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{desc}</p>
         </div>
-        <Badge variant="outline" className={cn("gap-1 font-medium", map.text)}>
+        <Badge variant="outline" className={cn("shrink-0 gap-1 text-[11px] font-medium", map.text)}>
           <span className={cn("h-1.5 w-1.5 rounded-full", map.dot)} />
           {map.label}
         </Badge>
       </div>
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
-        <span>Referência: {ref}</span>
-        <Icon className={cn("h-4 w-4", map.text)} />
+      <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
+        <p className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+          Não é necessário enviar documentos aqui. Após concluir o cadastro, o envio será feito no Portal do Fornecedor.
+        </p>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground/80">
+          <span>Referência: {ref}</span>
+          <Icon className={cn("h-4 w-4", map.text)} />
+        </div>
       </div>
     </div>
   );
