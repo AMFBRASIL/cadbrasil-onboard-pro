@@ -15,6 +15,7 @@ import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
 import { Route as CadastroSicafPessoaJuridicaRouteImport } from './routes/cadastro-sicaf-pessoa-juridica'
 import { Route as CadastroSicafMeiRouteImport } from './routes/cadastro-sicaf-mei'
+import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
@@ -48,6 +49,11 @@ const CadastroSicafMeiRoute = CadastroSicafMeiRouteImport.update({
   path: '/cadastro-sicaf-mei',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistenteRoute = AssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -56,6 +62,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/assistente'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assistente'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/assistente'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistenteRoute: typeof AssistenteRoute
   CadastroSicafMeiRoute: typeof CadastroSicafMeiRoute
   CadastroSicafPessoaJuridicaRoute: typeof CadastroSicafPessoaJuridicaRoute
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
@@ -166,6 +179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastroSicafMeiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistente': {
+      id: '/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistenteRoute: AssistenteRoute,
   CadastroSicafMeiRoute: CadastroSicafMeiRoute,
   CadastroSicafPessoaJuridicaRoute: CadastroSicafPessoaJuridicaRoute,
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,

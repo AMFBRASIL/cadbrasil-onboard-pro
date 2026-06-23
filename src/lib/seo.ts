@@ -123,6 +123,7 @@ export function buildConclusaoStructuredData(input: ConclusaoStructuredDataInput
 }
 
 export const SEO_PAGES: { path: string; label: string }[] = [
+  { path: "/assistente", label: "Assistente — tutoriais em vídeo" },
   { path: "/credenciamento-sicaf", label: "Credenciamento SICAF" },
   { path: "/renovacao-sicaf", label: "Renovação do SICAF" },
   { path: "/empresa-inapta-sicaf", label: "Empresa Inapta no SICAF" },
