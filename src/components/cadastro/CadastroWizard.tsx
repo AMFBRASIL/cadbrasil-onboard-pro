@@ -33,6 +33,7 @@ import {
   RefreshCw,
   Minus,
   Plus,
+  Upload,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { TopBar, Header } from "./LayoutParts";
@@ -44,6 +45,7 @@ import { criarCadastro } from "@/lib/cadastro";
 import { gerarSenhaForte } from "@/lib/senha";
 import { getTrackingForPayload, trackConversion } from "@/lib/tracking";
 import { GTM_EVENTS } from "@/lib/gtm";
+import { getPortalDocumentosUrl } from "@/lib/portal";
 import type { CnaeItem } from "@/lib/cnae";
 
 type StepKey =
@@ -409,7 +411,7 @@ function stepSubtitle(k: StepKey) {
     case "empresa": return "Informe o CNPJ para consultarmos automaticamente os dados oficiais da Receita Federal.";
     case "responsavel": return "Dados do representante legal responsável pelo credenciamento da empresa.";
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
-    case "diagnostico": return "Análise preliminar dos requisitos exigidos pela Lei nº 14.133/2021.";
+    case "diagnostico": return "Análise preliminar dos requisitos SICAF. Após concluir o cadastro e receber suas credenciais, o envio dos documentos é feito no Portal do Fornecedor.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
     case "acesso": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
@@ -904,6 +906,7 @@ function StepEndereco({ data, update }: { data: FormState; update: <K extends ke
 }
 
 function StepDiagnostico({ data }: { data: FormState }) {
+  const portalUrl = getPortalDocumentosUrl();
   const items = [
     { title: "Regularidade Fiscal", desc: "Verificação de certidões federais, estaduais e municipais.", status: "apto" as const, ref: "Lei 14.133/21, art. 68" },
     { title: "Capacidade Jurídica", desc: "Análise do contrato social e poderes do representante.", status: "apto" as const, ref: "Art. 66" },
@@ -916,6 +919,71 @@ function StepDiagnostico({ data }: { data: FormState }) {
       <div className="rounded-lg border border-border bg-primary-soft/30 px-4 py-3 text-sm text-primary-deep">
         Diagnóstico preliminar gerado automaticamente para o CNPJ {data.cnpj || "—"} com base na Lei nº 14.133/2021.
       </div>
+
+      <div className="overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary-soft/50 to-card shadow-sm">
+        <div className="border-b border-primary/15 bg-primary-deep/5 px-5 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md">
+              <Upload className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                Documentação SICAF
+              </p>
+              <h3 className="mt-0.5 text-base font-bold text-foreground">
+                Envio de documentos no Portal do Fornecedor
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Os documentos de habilitação <strong className="font-medium text-foreground">não são enviados nesta etapa</strong>.
+                Após concluir o cadastro e receber suas <strong className="font-medium text-foreground">credenciais de acesso</strong>{" "}
+                (e-mail e senha criados na etapa &quot;Acesso&quot;), você deverá acessar o Portal do Fornecedor CADBRASIL
+                para enviar contrato social, certidões e demais documentos exigidos pelo SICAF.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 px-5 py-4 sm:grid-cols-3">
+          {[
+            {
+              icon: BadgeCheck,
+              title: "1. Conclua o cadastro",
+              text: "Finalize as etapas Licença, Acesso e Revisão neste formulário.",
+            },
+            {
+              icon: KeyRound,
+              title: "2. Receba suas credenciais",
+              text: "Você receberá por e-mail o protocolo e os dados para entrar no portal.",
+            },
+            {
+              icon: FileUp,
+              title: "3. Envie no portal",
+              text: "Faça login e envie a documentação para análise da equipe CADBRASIL.",
+            },
+          ].map((step) => {
+            const StepIcon = step.icon;
+            return (
+            <div key={step.title} className="rounded-lg border border-border bg-background/80 p-4">
+              <StepIcon className="h-5 w-5 text-primary" />
+              <p className="mt-2 text-sm font-semibold text-foreground">{step.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.text}</p>
+            </div>
+            );
+          })}
+        </div>
+        <div className="flex flex-col items-stretch gap-2 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+            Ambiente seguro · análise em até 24 horas úteis após o envio
+          </p>
+          <Button asChild variant="outline" size="sm" className="shrink-0 border-primary/30 bg-background">
+            <a href={portalUrl} target="_blank" rel="noopener noreferrer">
+              Conhecer o Portal do Fornecedor
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </a>
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {items.map((it) => (
           <DiagnosticoCard key={it.title} {...it} />
