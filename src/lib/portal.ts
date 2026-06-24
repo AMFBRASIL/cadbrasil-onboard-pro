@@ -12,3 +12,9 @@ export function getPortalDocumentosUrl(): string {
   const base = getPortalUrl().replace(/\/$/, "");
   return `${base}/auth`;
 }
+
+/** Recuperação de senha no Portal do Fornecedor. */
+export function getPortalEsqueciSenhaUrl(): string {
+  const base = getPortalUrl().replace(/\/$/, "");
+  return `${base}/esqueci-senha`;
+}
