@@ -123,6 +123,7 @@ export function buildConclusaoStructuredData(input: ConclusaoStructuredDataInput
 }
 
 export const SEO_PAGES: { path: string; label: string }[] = [
+  { path: "/procedimentos-cadbrasil", label: "Procedimentos CADBRASIL" },
   { path: "/assistente", label: "Assistente — tutoriais em vídeo" },
   { path: "/credenciamento-sicaf", label: "Credenciamento SICAF" },
   { path: "/renovacao-sicaf", label: "Renovação do SICAF" },
