@@ -64,7 +64,10 @@ interface StepDef {
   icon: typeof Building2;
 }
 
-const STEPS: StepDef[] = [
+/** Etapa de Licença CADBRASIL (R$ 985) — desativada temporariamente no fluxo. */
+const LICENCA_STEP_ENABLED = false;
+
+const ALL_STEPS: StepDef[] = [
   { key: "empresa", num: 1, title: "Identificação da Empresa", short: "Empresa", icon: Building2 },
   { key: "responsavel", num: 2, title: "Responsável Legal", short: "Responsável", icon: UserRound },
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
@@ -73,6 +76,10 @@ const STEPS: StepDef[] = [
   { key: "acesso", num: 6, title: "Acesso ao Portal", short: "Acesso", icon: KeyRound },
   { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
+
+const STEPS: StepDef[] = (LICENCA_STEP_ENABLED ? ALL_STEPS : ALL_STEPS.filter((s) => s.key !== "plano")).map(
+  (step, index) => ({ ...step, num: index + 1 }),
+);
 
 interface FormState {
   tipoPessoa: "" | "pf" | "pj";
@@ -334,14 +341,28 @@ export function CadastroWizard() {
               </div>
 
               <div className="px-6 py-7">
-                <div key={current} className="animate-fade-in">
-                  {current === 0 && <StepEmpresa data={data} update={update} />}
-                  {current === 1 && <StepResponsavel data={data} update={update} />}
-                  {current === 2 && <StepEndereco data={data} update={update} />}
-                  {current === 3 && <StepDiagnostico data={data} />}
-                  {current === 4 && <StepPlano />}
-                  {current === 5 && <StepAcesso data={data} update={update} />}
-                  {current === 6 && <StepRevisao data={data} update={update} />}
+                <div key={STEPS[current].key} className="animate-fade-in">
+                  {(() => {
+                    const stepKey = STEPS[current].key;
+                    switch (stepKey) {
+                      case "empresa":
+                        return <StepEmpresa data={data} update={update} />;
+                      case "responsavel":
+                        return <StepResponsavel data={data} update={update} />;
+                      case "endereco":
+                        return <StepEndereco data={data} update={update} />;
+                      case "diagnostico":
+                        return <StepDiagnostico data={data} />;
+                      case "plano":
+                        return <StepPlano />;
+                      case "acesso":
+                        return <StepAcesso data={data} update={update} />;
+                      case "revisao":
+                        return <StepRevisao data={data} update={update} />;
+                      default:
+                        return null;
+                    }
+                  })()}
                 </div>
                 {submitError && (
                   <div className="mt-4 flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -1356,9 +1377,11 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
         <ReviewItem k="E-mail de login" v={data.emailAcesso || "—"} />
         <ReviewItem k="Senha" v={data.senha ? "•".repeat(Math.min(data.senha.length, 10)) : "—"} />
       </ReviewBlock>
-      <ReviewBlock title="Licença CADBRASIL">
-        <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
-      </ReviewBlock>
+      {LICENCA_STEP_ENABLED && (
+        <ReviewBlock title="Licença CADBRASIL">
+          <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,00" />
+        </ReviewBlock>
+      )}
 
       <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-primary-soft/30 p-4">
         <Checkbox checked={data.declaracao} onCheckedChange={(c) => update("declaracao", Boolean(c))} className="mt-0.5" />
