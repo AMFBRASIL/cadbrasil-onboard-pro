@@ -18,3 +18,9 @@ export function getPortalEsqueciSenhaUrl(): string {
   const base = getPortalUrl().replace(/\/$/, "");
   return `${base}/esqueci-senha`;
 }
+
+/** Central de Ajuda dentro do Portal do Fornecedor. */
+export function getPortalCentralAjudaUrl(): string {
+  const base = getPortalUrl().replace(/\/$/, "");
+  return `${base}/central-ajuda`;
+}
