@@ -15,8 +15,7 @@ import {
 
 import { TopBar, Header } from "@/components/cadastro/LayoutParts";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { getPortalCentralAjudaUrl, getPortalUrl } from "@/lib/portal";
+import { getPortalCentralAjudaUrl, getPortalDocumentosUrl, getPortalUrl } from "@/lib/portal";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const HERO_IMG = "/instalador-assistente-hero.png";
@@ -65,7 +64,33 @@ const BENEFICIOS = [
 
 export function InstaladorAssistenteContent() {
   const portalUrl = getPortalUrl();
+  const portalLoginUrl = getPortalDocumentosUrl();
   const centralAjudaUrl = getPortalCentralAjudaUrl();
+
+  const passosComAcao = PASSOS.map((passo) => {
+    if (passo.num === 1) {
+      return {
+        ...passo,
+        buttonLabel: "Acessar o portal",
+        buttonHref: portalLoginUrl,
+        external: true,
+      };
+    }
+    if (passo.num === 2) {
+      return {
+        ...passo,
+        buttonLabel: "Abrir Central de Ajuda",
+        buttonHref: centralAjudaUrl,
+        external: true,
+      };
+    }
+    return {
+      ...passo,
+      buttonLabel: "Ver tutoriais em vídeo",
+      buttonHref: "/assistente",
+      external: false,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -141,7 +166,7 @@ export function InstaladorAssistenteContent() {
           </div>
 
           <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {PASSOS.map((passo) => {
+            {passosComAcao.map((passo) => {
               const Icon = passo.icon;
               return (
                 <div
@@ -158,9 +183,27 @@ export function InstaladorAssistenteContent() {
                     {passo.tag}
                   </span>
                   <h3 className="mt-1 text-base font-semibold text-foreground">{passo.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
                     {passo.text}
                   </p>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="mt-5 w-full"
+                    variant={passo.num === 1 ? "default" : "outline"}
+                  >
+                    {passo.external ? (
+                      <a href={passo.buttonHref} target="_blank" rel="noopener noreferrer">
+                        {passo.buttonLabel}
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
+                    ) : (
+                      <Link to={passo.buttonHref}>
+                        {passo.buttonLabel}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    )}
+                  </Button>
                 </div>
               );
             })}
