@@ -18,6 +18,7 @@ import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
 import { Route as CadastroSicafPessoaJuridicaRouteImport } from './routes/cadastro-sicaf-pessoa-juridica'
 import { Route as CadastroSicafMeiRouteImport } from './routes/cadastro-sicaf-mei'
+import { Route as AssistenteAjudaRouteImport } from './routes/assistente-ajuda'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -68,6 +69,11 @@ const CadastroSicafMeiRoute = CadastroSicafMeiRouteImport.update({
   path: '/cadastro-sicaf-mei',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistenteAjudaRoute = AssistenteAjudaRouteImport.update({
+  id: '/assistente-ajuda',
+  path: '/assistente-ajuda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AssistenteRoute = AssistenteRouteImport.update({
   id: '/assistente',
   path: '/assistente',
@@ -82,6 +88,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/assistente-ajuda': typeof AssistenteAjudaRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/assistente-ajuda': typeof AssistenteAjudaRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/assistente-ajuda': typeof AssistenteAjudaRoute
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/assistente'
+    | '/assistente-ajuda'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/assistente'
+    | '/assistente-ajuda'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/assistente'
+    | '/assistente-ajuda'
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistenteRoute: typeof AssistenteRoute
+  AssistenteAjudaRoute: typeof AssistenteAjudaRoute
   CadastroSicafMeiRoute: typeof CadastroSicafMeiRoute
   CadastroSicafPessoaJuridicaRoute: typeof CadastroSicafPessoaJuridicaRoute
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastroSicafMeiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistente-ajuda': {
+      id: '/assistente-ajuda'
+      path: '/assistente-ajuda'
+      fullPath: '/assistente-ajuda'
+      preLoaderRoute: typeof AssistenteAjudaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/assistente': {
       id: '/assistente'
       path: '/assistente'
@@ -260,6 +280,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistenteRoute: AssistenteRoute,
+  AssistenteAjudaRoute: AssistenteAjudaRoute,
   CadastroSicafMeiRoute: CadastroSicafMeiRoute,
   CadastroSicafPessoaJuridicaRoute: CadastroSicafPessoaJuridicaRoute,
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,

@@ -123,6 +123,7 @@ export function buildConclusaoStructuredData(input: ConclusaoStructuredDataInput
 }
 
 export const SEO_PAGES: { path: string; label: string }[] = [
+  { path: "/assistente-ajuda", label: "Assistente — acesso ao SICAF" },
   { path: "/instalador-assistente-cadbrasil", label: "Instalar o Assistente" },
   { path: "/procedimento-login-senha", label: "Login e senha no portal" },
   { path: "/procedimentos-cadbrasil", label: "Procedimentos CADBRASIL" },

@@ -24,3 +24,13 @@ export function getPortalCentralAjudaUrl(): string {
   const base = getPortalUrl().replace(/\/$/, "");
   return `${base}/ajuda`;
 }
+
+/** Página Assistente SICAF no Portal do Fornecedor. */
+export function getPortalAssistenteSicafUrl(): string {
+  const base = getPortalUrl().replace(/\/$/, "");
+  return `${base}/assistente-sicaf`;
+}
+
+/** Login oficial do SICAF (gov.br / certificado digital). */
+export const SICAF_LOGIN_URL =
+  "https://www3.comprasnet.gov.br/seguro/loginPortalFornecedor.asp";
