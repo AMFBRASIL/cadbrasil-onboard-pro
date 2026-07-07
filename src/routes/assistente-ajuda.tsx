@@ -4,9 +4,9 @@ import { AssistenteAjudaContent } from "@/components/assistente/AssistenteAjudaC
 import { buildSeoHead } from "@/lib/seo";
 
 const PATH = "/assistente-ajuda";
-const TITLE = "Assistente de Ajuda — como acessar o SICAF passo a passo";
+const TITLE = "Assistente de Ajuda — guia completo SICAF e atualização CADBRASIL";
 const DESCRIPTION =
-  "Guia visual em 3 passos: acesse o Assistente CADBRASIL, entre no SICAF com certificado digital e use os menus Cadastro e Consulta.";
+  "Guia visual em 6 passos: acesse o SICAF, baixe a Situação do Fornecedor em PDF, envie no Assistente CADBRASIL e acompanhe o resultado atualizado.";
 
 export const Route = createFileRoute("/assistente-ajuda")({
   head: () =>

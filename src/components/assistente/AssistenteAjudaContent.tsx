@@ -6,12 +6,16 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  FileDown,
   FileSearch,
   KeyRound,
   Layers,
   MousePointerClick,
   ShieldCheck,
+  Sparkles,
+  Upload,
   ZoomIn,
+  type LucideIcon,
 } from "lucide-react";
 
 import { TopBar, Header } from "@/components/cadastro/LayoutParts";
@@ -40,7 +44,7 @@ type Slide = {
   buttonLabel: string;
   buttonHref: string;
   external: boolean;
-  icon: typeof LogIn;
+  icon: LucideIcon;
 };
 
 const SLIDES: Slide[] = [
@@ -98,6 +102,60 @@ const SLIDES: Slide[] = [
     buttonHref: SICAF_LOGIN_URL,
     external: true,
   },
+  {
+    num: 4,
+    icon: FileDown,
+    title: "Baixar a Situação do Fornecedor em PDF",
+    description:
+      "No SICAF, acesse o menu Consulta → Situação do Fornecedor, pesquise pelo CNPJ da empresa e baixe o relatório em PDF para enviar ao Assistente CADBRASIL.",
+    bullets: [
+      "Etapa 1: no menu superior, clique em Consulta e depois em Situação do Fornecedor.",
+      "Etapa 2: informe o CNPJ da empresa e clique em Pesquisar.",
+      "Etapa 3: na coluna Relatórios, clique no botão Situação do Fornecedor para baixar o PDF.",
+      "Guarde o arquivo — você usará esse PDF no próximo passo para atualizar o processo CADBRASIL.",
+    ],
+    image: "/ajuda-04-situacao-fornecedor.png",
+    imageAlt: "Tela do SICAF para consultar e baixar a Situação do Fornecedor em PDF",
+    buttonLabel: "Abrir SICAF para baixar PDF",
+    buttonHref: SICAF_LOGIN_URL,
+    external: true,
+  },
+  {
+    num: 5,
+    icon: Upload,
+    title: "Enviar o PDF no Assistente CADBRASIL",
+    description:
+      "Com o PDF da Situação do Fornecedor em mãos, volte ao Assistente CADBRASIL no portal e envie o arquivo para que o sistema atualize automaticamente seu processo.",
+    bullets: [
+      "Acesse o Assistente CADBRASIL no Portal do Fornecedor.",
+      "Na parte inferior da conversa, clique em Enviar Situação do Fornecedor — PDF.",
+      "Selecione o PDF que você baixou do SICAF (Compras.gov.br).",
+      "Aguarde a análise — o Assistente irá atualizar os níveis e pendências do seu cadastro.",
+    ],
+    image: "/ajuda-05-enviar-pdf-assistente.png",
+    imageAlt: "Assistente CADBRASIL com botão para enviar PDF da Situação do Fornecedor",
+    buttonLabel: "Abrir Assistente no Portal",
+    buttonHref: "",
+    external: true,
+  },
+  {
+    num: 6,
+    icon: Sparkles,
+    title: "Resultado final — processo atualizado",
+    description:
+      "Após o envio do PDF, o Assistente CADBRASIL atualiza os níveis SICAF, exibe o progresso e informa se há pendências. Com tudo validado, sua empresa fica pronta para licitar.",
+    bullets: [
+      "Os 6 níveis SICAF são exibidos com status Validado, Pendente ou em análise.",
+      "O histórico de PDFs enviados fica registrado em Últimas situações enviadas.",
+      "A seção Pendências detectadas mostra se ainda há algo a corrigir.",
+      "Quando tudo estiver em ordem, você verá 100% atingido — pronto para licitar.",
+    ],
+    image: "/ajuda-06-resultado-final.png",
+    imageAlt: "Tela do Assistente CADBRASIL com níveis SICAF validados e sem pendências",
+    buttonLabel: "Acessar Assistente CADBRASIL",
+    buttonHref: "",
+    external: true,
+  },
 ];
 
 export function AssistenteAjudaContent() {
@@ -106,9 +164,12 @@ export function AssistenteAjudaContent() {
   const portalAssistenteUrl = getPortalAssistenteSicafUrl();
   const portalLoginUrl = getPortalDocumentosUrl();
 
-  const slides = SLIDES.map((slide) =>
-    slide.num === 1 ? { ...slide, buttonHref: portalAssistenteUrl } : slide,
-  );
+  const slides = SLIDES.map((slide) => {
+    if (slide.num === 1 || slide.num === 5 || slide.num === 6) {
+      return { ...slide, buttonHref: portalAssistenteUrl };
+    }
+    return slide;
+  });
   const slide = slides[current];
   const SlideIcon = slide.icon;
   const isFirst = current === 0;
@@ -134,24 +195,24 @@ export function AssistenteAjudaContent() {
               Guia visual passo a passo
             </span>
             <h1 className="mt-5 text-3xl font-bold tracking-tight lg:text-4xl">
-              Como acessar o SICAF pelo Assistente CADBRASIL
+              Como usar o Assistente CADBRASIL e atualizar o SICAF
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-primary-foreground/85">
-              Siga os 3 passos abaixo com imagens ampliadas. O acesso ao SICAF exige certificado
-              digital da empresa.
+              Siga os 6 passos abaixo com imagens ampliadas — do acesso ao SICAF até o envio do
+              PDF e a atualização completa do seu cadastro.
             </p>
           </div>
         </section>
 
         <div className="mx-auto max-w-5xl px-4 py-10 lg:px-8 lg:py-14">
-          <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {slides.map((s, index) => (
               <button
                 key={s.num}
                 type="button"
                 onClick={() => setCurrent(index)}
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-colors sm:h-11 sm:w-11",
+                  "flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors sm:h-10 sm:w-10 sm:text-sm",
                   index === current
                     ? "bg-primary text-primary-foreground shadow-md"
                     : index < current
@@ -274,7 +335,7 @@ export function AssistenteAjudaContent() {
             </div>
           </article>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {slides.map((s, index) => (
               <button
                 key={s.num}
