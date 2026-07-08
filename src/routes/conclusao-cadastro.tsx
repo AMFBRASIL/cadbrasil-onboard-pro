@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,6 +17,7 @@ import {
   Clock,
   ArrowRight,
   AlertCircle,
+  Copy,
 } from "lucide-react";
 import { TopBar, Header } from "@/components/cadastro/LayoutParts";
 import type { ConsultaProtocoloResult } from "@/lib/cadastro-consulta-types";
@@ -276,17 +277,7 @@ function ConclusaoCadastroPage() {
           )}
         </p>
 
-        <div className="mx-auto mt-6 inline-flex items-center gap-3 rounded-lg border border-border bg-primary-soft/40 px-5 py-3 text-left">
-          <FileCheck2 className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Número do Processo
-            </p>
-            <p className="font-mono text-base font-semibold text-primary-deep">
-              {protocoloExibido}
-            </p>
-          </div>
-        </div>
+        <ProtocoloDisplay protocolo={protocoloExibido} />
 
         {(emailAcesso || cadastro.contrato) && (
           <div className="mx-auto mt-4 flex max-w-xl flex-wrap justify-center gap-2 text-xs text-muted-foreground">
@@ -483,4 +474,51 @@ function formatDateBr(iso: string): string {
   const [y, m, d] = iso.split("-");
   if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
+}
+
+function ProtocoloDisplay({ protocolo }: { protocolo: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const podeCopiar = protocolo !== "—";
+
+  const copiar = async () => {
+    if (!podeCopiar) return;
+    try {
+      await navigator.clipboard.writeText(protocolo);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      /* clipboard indisponível */
+    }
+  };
+
+  return (
+    <div className="mx-auto mt-8 w-full max-w-2xl rounded-2xl border-2 border-primary/25 bg-primary-soft/50 px-6 py-5 shadow-sm">
+      <div className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-primary-deep/80">
+        <FileCheck2 className="h-4 w-4" />
+        Número do Processo
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={copiar}
+          disabled={!podeCopiar}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-background text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label={copiado ? "Protocolo copiado" : "Copiar protocolo"}
+          title={copiado ? "Copiado!" : "Copiar protocolo"}
+        >
+          {copiado ? (
+            <CheckCircle2 className="h-6 w-6 text-success" />
+          ) : (
+            <Copy className="h-6 w-6" />
+          )}
+        </button>
+        <p className="font-mono text-2xl font-bold tracking-wide text-primary-deep sm:text-3xl lg:text-4xl">
+          {protocolo}
+        </p>
+      </div>
+      {copiado && (
+        <p className="mt-2 text-center text-xs font-medium text-success">Protocolo copiado!</p>
+      )}
+    </div>
+  );
 }
