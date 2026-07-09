@@ -257,6 +257,27 @@ const QUESTIONS: Q[] = [
         score: 5,
       },
     ],
+    helpTitle: "Por que preciso de Certificado Digital?",
+    helpContent: (
+      <>
+        <p>
+          O Certificado Digital (e-CNPJ para empresas ou e-CPF para pessoas
+          físicas) garante sua identidade nos portais de compras públicas.
+        </p>
+        <p className="mt-2">
+          Ele é exigido para:
+        </p>
+        <ul className="list-disc pl-5 mt-1 space-y-1">
+          <li>Acessar o ComprasNet e o PNCP com segurança;</li>
+          <li>Assinar propostas e contratos digitalmente;</li>
+          <li>Comprovar representação legal da empresa.</li>
+        </ul>
+        <p className="mt-2">
+          Se você não tem certificado ou ele está vencido, a CADBRASIL emite um
+          novo com validade de 1 ano ou 3 anos, conforme a sua necessidade.
+        </p>
+      </>
+    ),
   },
   {
     id: "urgencia",
