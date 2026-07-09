@@ -342,9 +342,10 @@ function IniciarPage() {
             </div>
             <div>
               <div className="text-sm font-bold leading-none">
-                CADBRASIL Oficial <sup className="text-[10px]">®</sup>
+                CADBRASIL Oficial (R)
               </div>
               <div className="text-xs text-muted-foreground">Credenciamento SICAF</div>
+
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
