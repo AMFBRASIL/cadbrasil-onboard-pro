@@ -453,87 +453,103 @@ function IniciarPage() {
 
         {isFinal && (
           <section>
-            <Card className="p-6 md:p-10 border-2">
-              <div className="text-center">
-                <div
-                  className={`inline-flex h-16 w-16 items-center justify-center rounded-full mb-4 ${
-                    apto
-                      ? "bg-success/15 text-success"
-                      : "bg-destructive/15 text-destructive"
-                  }`}
-                >
-                  {apto ? (
-                    <CheckCircle2 className="h-9 w-9" />
-                  ) : (
-                    <XCircle className="h-9 w-9" />
-                  )}
-                </div>
-                <h2 className="text-2xl md:text-4xl font-bold tracking-tight">
-                  {apto
-                    ? "Você está apto a participar de licitações"
-                    : "Ainda não é o momento"}
-                </h2>
-                <p className="text-muted-foreground mt-3 max-w-xl mx-auto md:text-lg">
-                  {motivo}
-                </p>
-              </div>
-
-              {apto && (
-                <div className="mt-8 grid gap-3 md:grid-cols-3">
-                  <StatBadge label="Aderência" value={`${score}%`} />
-                  <StatBadge label="Órgãos ativos" value="220k+" />
-                  <StatBadge label="Prazo médio" value="24h" />
-                </div>
-              )}
-
-              <div className="mt-8 flex flex-col items-center gap-3">
-                {apto ? (
-                  <a
-                    href={CADASTRO_URL}
-                    className="w-full max-w-md inline-flex items-center justify-center gap-2 h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base md:text-lg hover:bg-primary-deep transition-colors shadow-lg shadow-primary/20"
+            <Card className="overflow-hidden border-2 p-0">
+              <div
+                className={`p-6 md:p-10 ${
+                  apto
+                    ? "bg-success text-success-foreground"
+                    : "bg-destructive text-destructive-foreground"
+                }`}
+              >
+                <div className="flex items-start gap-4 md:gap-6">
+                  <div
+                    className={`h-14 w-14 shrink-0 rounded-2xl flex items-center justify-center ${
+                      apto ? "bg-white/20" : "bg-white/20"
+                    }`}
                   >
-                    Iniciar Cadastro CADBRASIL
-                    <ArrowRight className="h-5 w-5" />
-                  </a>
-                ) : (
-                  <Button variant="outline" onClick={handleRestart}>
-                    Refazer perguntas
-                  </Button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleRestart}
-                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
-                >
-                  Refazer o onboarding
-                </button>
+                    {apto ? (
+                      <CheckCircle2 className="h-7 w-7" />
+                    ) : (
+                      <XCircle className="h-7 w-7" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs md:text-sm font-semibold uppercase tracking-wider opacity-90 mb-2">
+                      Diagnóstico CADBRASIL
+                    </div>
+                    <h2 className="text-2xl md:text-4xl font-bold tracking-tight">
+                      {apto
+                        ? "Você está pronto para licitar!"
+                        : "Ainda não é o momento"}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm md:text-base opacity-95">
+                      {apto
+                        ? "Sua situação indica alta prontidão. Vamos ativar seu acesso e começar a receber editais."
+                        : motivo}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-8 border-t pt-6">
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Suas respostas
+              <div className="p-6 md:p-10">
+                {apto && (
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <StatBadge label="Aderência" value={`${score}%`} />
+                    <StatBadge label="Órgãos ativos" value="220k+" />
+                    <StatBadge label="Prazo médio" value="24h" />
+                  </div>
+                )}
+
+                <div className="mt-8 flex flex-col items-center gap-3">
+                  {apto ? (
+                    <a
+                      href={CADASTRO_URL}
+                      className="w-full max-w-md inline-flex items-center justify-center gap-2 h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base md:text-lg hover:bg-primary-deep transition-colors shadow-lg shadow-primary/20"
+                    >
+                      Iniciar Cadastro CADBRASIL
+                      <ArrowRight className="h-5 w-5" />
+                    </a>
+                  ) : (
+                    <Button variant="outline" onClick={handleRestart}>
+                      Refazer perguntas
+                    </Button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleRestart}
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+                  >
+                    Refazer o onboarding
+                  </button>
                 </div>
-                <ul className="space-y-2">
-                  {QUESTIONS.map((q) => {
-                    const v = answers[q.id];
-                    const opt = q.options.find((o) => o.value === v);
-                    return (
-                      <li
-                        key={q.id}
-                        className="flex items-start justify-between gap-4 text-sm"
-                      >
-                        <span className="text-muted-foreground">{q.title}</span>
-                        <span className="font-medium text-right">
-                          {opt?.label ?? "—"}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+
+                <div className="mt-8 border-t pt-6">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    Suas respostas
+                  </div>
+                  <ul className="space-y-2">
+                    {QUESTIONS.map((q) => {
+                      const v = answers[q.id];
+                      const opt = q.options.find((o) => o.value === v);
+                      return (
+                        <li
+                          key={q.id}
+                          className="flex items-start justify-between gap-4 text-sm"
+                        >
+                          <span className="text-muted-foreground">{q.title}</span>
+                          <span className="font-medium text-right">
+                            {opt?.label ?? "—"}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             </Card>
           </section>
         )}
+
       </main>
 
       <Dialog open={!!helpOpen} onOpenChange={(o) => !o && setHelpOpen(null)}>
