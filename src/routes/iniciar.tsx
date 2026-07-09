@@ -86,6 +86,8 @@ const QUESTIONS: Question[] = [
         description: "Já decidi e quero começar o quanto antes.",
         icon: Gavel,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "talvez",
@@ -93,6 +95,8 @@ const QUESTIONS: Question[] = [
         description: "Quero entender melhor antes de decidir.",
         icon: FileSearch,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
       {
         value: "nao",
@@ -100,6 +104,8 @@ const QUESTIONS: Question[] = [
         description: "Estou apenas explorando a plataforma.",
         icon: XCircle,
         aptoImpact: "negative",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
     ],
   },
@@ -119,6 +125,8 @@ const QUESTIONS: Question[] = [
         description: "MEI, ME, EPP, LTDA ou outro tipo societário.",
         icon: Building2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "cpf",
@@ -126,6 +134,8 @@ const QUESTIONS: Question[] = [
         description: "Ainda não tenho empresa aberta.",
         icon: User,
         aptoImpact: "neutral",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
       },
     ],
   },
@@ -145,6 +155,8 @@ const QUESTIONS: Question[] = [
         description: "Acompanho editais e conheço a plataforma.",
         icon: CheckCircle2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "talvez",
@@ -152,6 +164,8 @@ const QUESTIONS: Question[] = [
         description: "Conheço superficialmente, mas nunca operei.",
         icon: FileSearch,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
       {
         value: "nao",
@@ -159,6 +173,8 @@ const QUESTIONS: Question[] = [
         description: "Nunca ouvi falar do PNCP.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
@@ -178,6 +194,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso apenas de manutenção ou renovação.",
         icon: ShieldCheck,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "nao",
@@ -185,6 +203,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso do credenciamento completo.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
       {
         value: "talvez",
@@ -192,6 +212,8 @@ const QUESTIONS: Question[] = [
         description: "Meu cadastro está desatualizado ou vencido.",
         icon: AlertTriangle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
@@ -211,6 +233,8 @@ const QUESTIONS: Question[] = [
         description: "e-CNPJ ou e-CPF dentro da validade.",
         icon: CheckCircle2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "nao",
@@ -218,6 +242,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso adquirir um certificado.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
       {
         value: "talvez",
@@ -225,10 +251,13 @@ const QUESTIONS: Question[] = [
         description: "Preciso renovar meu certificado.",
         icon: AlertTriangle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
 ];
+
 
 const CADASTRO_URL = "https://cadastro.cadbrasil.com.br";
 
