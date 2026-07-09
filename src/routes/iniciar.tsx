@@ -329,25 +329,27 @@ function IniciarPage() {
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-14">
         {!isFinal && currentQuestion && (
           <section>
-            <div className="mb-8 text-center">
+            <div className="mb-8">
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-4">
                 <Sparkles className="h-3.5 w-3.5" />
                 Pergunta {step + 1}
               </div>
-              <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-                {currentQuestion.title}
-              </h1>
+              <div className="flex items-start justify-between gap-4">
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
+                  {currentQuestion.title}
+                </h1>
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen(currentQuestion.id)}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs md:text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  O que é?
+                </button>
+              </div>
               <p className="text-muted-foreground mt-2 md:text-lg">
                 {currentQuestion.subtitle}
               </p>
-              <button
-                type="button"
-                onClick={() => setHelpOpen(currentQuestion.id)}
-                className="mt-3 inline-flex items-center gap-1.5 text-xs md:text-sm text-primary hover:underline font-medium"
-              >
-                <HelpCircle className="h-4 w-4" />
-                O que é isso?
-              </button>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -359,26 +361,37 @@ function IniciarPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => handleSelect(opt.value)}
-                    className={`group text-left rounded-xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
+                    className={`group relative text-left rounded-2xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
                       selected
                         ? "border-primary ring-2 ring-primary/20 shadow-md"
                         : "border-border"
                     }`}
                   >
-                    <div
-                      className={`h-11 w-11 rounded-lg flex items-center justify-center mb-3 transition-colors ${
-                        selected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-primary/10 text-primary group-hover:bg-primary/15"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="font-semibold text-sm md:text-base">
-                      {opt.label}
-                    </div>
-                    <div className="text-xs md:text-sm text-muted-foreground mt-1">
-                      {opt.description}
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                          selected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-primary/10 text-primary group-hover:bg-primary/15"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm md:text-base">
+                          {opt.label}
+                        </div>
+                        <div className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                          {opt.description}
+                        </div>
+                      </div>
+                      <ArrowRight
+                        className={`h-5 w-5 shrink-0 transition-transform ${
+                          selected
+                            ? "text-primary translate-x-0.5"
+                            : "text-muted-foreground group-hover:text-primary"
+                        }`}
+                      />
                     </div>
                   </button>
                 );
