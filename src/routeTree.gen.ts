@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RenovacaoSicafRouteImport } from './routes/renovacao-sicaf'
+import { Route as IniciarRouteImport } from './routes/iniciar'
 import { Route as EmpresaInaptaSicafRouteImport } from './routes/empresa-inapta-sicaf'
 import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento-sicaf'
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
   id: '/renovacao-sicaf',
   path: '/renovacao-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IniciarRoute = IniciarRouteImport.update({
+  id: '/iniciar',
+  path: '/iniciar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmpresaInaptaSicafRoute = EmpresaInaptaSicafRouteImport.update({
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/iniciar': typeof IniciarRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesByTo {
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/iniciar': typeof IniciarRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesById {
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
+  '/iniciar': typeof IniciarRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRouteTypes {
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/conclusao-cadastro'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
+    | '/iniciar'
     | '/renovacao-sicaf'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/conclusao-cadastro'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
+    | '/iniciar'
     | '/renovacao-sicaf'
   id:
     | '__root__'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/conclusao-cadastro'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
+    | '/iniciar'
     | '/renovacao-sicaf'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
   CredenciamentoSicafRoute: typeof CredenciamentoSicafRoute
   EmpresaInaptaSicafRoute: typeof EmpresaInaptaSicafRoute
+  IniciarRoute: typeof IniciarRoute
   RenovacaoSicafRoute: typeof RenovacaoSicafRoute
 }
 
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/renovacao-sicaf'
       fullPath: '/renovacao-sicaf'
       preLoaderRoute: typeof RenovacaoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iniciar': {
+      id: '/iniciar'
+      path: '/iniciar'
+      fullPath: '/iniciar'
+      preLoaderRoute: typeof IniciarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/empresa-inapta-sicaf': {
@@ -183,18 +203,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,
   CredenciamentoSicafRoute: CredenciamentoSicafRoute,
   EmpresaInaptaSicafRoute: EmpresaInaptaSicafRoute,
+  IniciarRoute: IniciarRoute,
   RenovacaoSicafRoute: RenovacaoSicafRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
