@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RenovacaoSicafRouteImport } from './routes/renovacao-sicaf'
+import { Route as Iniciar2RouteImport } from './routes/iniciar2'
 import { Route as IniciarRouteImport } from './routes/iniciar'
 import { Route as EmpresaInaptaSicafRouteImport } from './routes/empresa-inapta-sicaf'
 import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento-sicaf'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
   id: '/renovacao-sicaf',
   path: '/renovacao-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Iniciar2Route = Iniciar2RouteImport.update({
+  id: '/iniciar2',
+  path: '/iniciar2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IniciarRoute = IniciarRouteImport.update({
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/iniciar': typeof IniciarRoute
+  '/iniciar2': typeof Iniciar2Route
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesByTo {
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/iniciar': typeof IniciarRoute
+  '/iniciar2': typeof Iniciar2Route
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRoutesById {
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/iniciar': typeof IniciarRoute
+  '/iniciar2': typeof Iniciar2Route
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
 }
 export interface FileRouteTypes {
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/iniciar'
+    | '/iniciar2'
     | '/renovacao-sicaf'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/iniciar'
+    | '/iniciar2'
     | '/renovacao-sicaf'
   id:
     | '__root__'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/iniciar'
+    | '/iniciar2'
     | '/renovacao-sicaf'
   fileRoutesById: FileRoutesById
 }
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   CredenciamentoSicafRoute: typeof CredenciamentoSicafRoute
   EmpresaInaptaSicafRoute: typeof EmpresaInaptaSicafRoute
   IniciarRoute: typeof IniciarRoute
+  Iniciar2Route: typeof Iniciar2Route
   RenovacaoSicafRoute: typeof RenovacaoSicafRoute
 }
 
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/renovacao-sicaf'
       fullPath: '/renovacao-sicaf'
       preLoaderRoute: typeof RenovacaoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iniciar2': {
+      id: '/iniciar2'
+      path: '/iniciar2'
+      fullPath: '/iniciar2'
+      preLoaderRoute: typeof Iniciar2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/iniciar': {
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   CredenciamentoSicafRoute: CredenciamentoSicafRoute,
   EmpresaInaptaSicafRoute: EmpresaInaptaSicafRoute,
   IniciarRoute: IniciarRoute,
+  Iniciar2Route: Iniciar2Route,
   RenovacaoSicafRoute: RenovacaoSicafRoute,
 }
 export const routeTree = rootRouteImport
