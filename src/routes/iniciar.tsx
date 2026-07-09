@@ -336,13 +336,15 @@ function IniciarPage() {
     <div className="min-h-screen bg-gradient-to-b from-primary-soft/40 via-background to-background">
       <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
               CB
             </div>
             <div>
-              <div className="text-sm font-bold leading-none">CADBRASIL</div>
-              <div className="text-xs text-muted-foreground">Onboarding</div>
+              <div className="text-sm font-bold leading-none">
+                CADBRASIL Oficial <sup className="text-[10px]">®</sup>
+              </div>
+              <div className="text-xs text-muted-foreground">Credenciamento SICAF</div>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
@@ -357,6 +359,7 @@ function IniciarPage() {
           <Progress value={progress} className="h-2" />
         </div>
       </header>
+
 
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-14">
         {!isFinal && currentQuestion && (
