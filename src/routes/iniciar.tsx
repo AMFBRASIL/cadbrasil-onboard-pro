@@ -313,6 +313,10 @@ function IniciarPage() {
               <div className="text-xs text-muted-foreground">Onboarding</div>
             </div>
           </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+            <Sparkles className="h-3.5 w-3.5" />
+            Preparação do SICAF Comprasnet
+          </div>
           <div className="text-xs md:text-sm text-muted-foreground">
             {isFinal ? "Concluído" : `Etapa ${step + 1} de ${totalSteps}`}
           </div>
