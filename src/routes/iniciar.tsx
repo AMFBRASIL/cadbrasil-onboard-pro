@@ -140,19 +140,19 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: "pncp",
-    title: "Você conhece o PNCP?",
-    subtitle: "Portal Nacional de Contratações Públicas.",
+    id: "portais",
+    title: "Você conhece os portais de licitações?",
+    subtitle: "PNCP, ComprasNet e portais de estados e prefeituras.",
     help: {
-      title: "O que é o PNCP?",
+      title: "Onde encontrar licitações públicas?",
       body:
-        "O PNCP (Portal Nacional de Contratações Públicas) é o portal oficial criado pela Lei nº 14.133/2021 (Nova Lei de Licitações). Ele centraliza a publicação de editais, atas de registro de preços e contratos de todos os órgãos públicos do Brasil. É onde sua empresa encontra as oportunidades — não conhecer o PNCP não impede sua participação, nós te orientamos.",
+        "As compras públicas são publicadas em diferentes portais. O PNCP (Portal Nacional de Contratações Públicas) centraliza editais, contratos e atas de órgãos federais. O ComprasNet é usado para pregões eletrônicos do governo federal. Estados, municípios e prefeituras também têm seus próprios portais de licitação. Não conhecer todos não impede sua participação — nós te orientamos onde buscar as melhores oportunidades.",
     },
     options: [
       {
         value: "sim",
-        label: "Sim, já uso o PNCP",
-        description: "Acompanho editais e conheço a plataforma.",
+        label: "Sim, já acompanho editais",
+        description: "Conheço o PNCP, ComprasNet ou outros portais.",
         icon: CheckCircle2,
         aptoImpact: "positive",
         iconBg: "bg-emerald-100",
@@ -160,8 +160,8 @@ const QUESTIONS: Question[] = [
       },
       {
         value: "talvez",
-        label: "Já ouvi falar",
-        description: "Conheço superficialmente, mas nunca operei.",
+        label: "Já ouvi falar de alguns",
+        description: "Conheço superficialmente, mas não operei.",
         icon: FileSearch,
         aptoImpact: "neutral",
         iconBg: "bg-amber-100",
@@ -169,8 +169,8 @@ const QUESTIONS: Question[] = [
       },
       {
         value: "nao",
-        label: "Não conheço",
-        description: "Nunca ouvi falar do PNCP.",
+        label: "Não conheço ainda",
+        description: "Nunca acessei portais de licitações.",
         icon: XCircle,
         aptoImpact: "neutral",
         iconBg: "bg-amber-100",
@@ -178,6 +178,7 @@ const QUESTIONS: Question[] = [
       },
     ],
   },
+
   {
     id: "sicaf",
     title: "Você já possui o SICAF ativo no ComprasNet?",
