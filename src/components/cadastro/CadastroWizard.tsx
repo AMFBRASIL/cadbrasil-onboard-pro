@@ -95,6 +95,7 @@ interface FormState {
   segmento: string;
   cnaes: CnaeItem[];
   empresaOk: boolean;
+  empresaManual: boolean;
 
   nome: string;
   cpf: string;
@@ -135,6 +136,7 @@ const INITIAL: FormState = {
   segmento: "",
   cnaes: [],
   empresaOk: false,
+  empresaManual: false,
   nome: "",
   cpf: "",
   nascimento: "",
@@ -177,6 +179,13 @@ function maskPhone(v: string) {
 }
 function maskCEP(v: string) {
   return v.replace(/\D/g, "").slice(0, 8).replace(/^(\d{5})(\d)/, "$1-$2");
+}
+function maskDateBR(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 8)
+    .replace(/^(\d{2})(\d)/, "$1/$2")
+    .replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");
 }
 function isValidEmail(e: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -225,6 +234,26 @@ export function CadastroWizard() {
 
   const next = () => {
     const stepKey = STEPS[current].key;
+
+    if (stepKey === "empresa" && data.tipoPessoa === "pj") {
+      const cnpjDigits = data.cnpj.replace(/\D/g, "");
+      if (cnpjDigits.length !== 14) {
+        setSubmitError("Informe um CNPJ válido com 14 dígitos.");
+        return;
+      }
+      if (!data.empresaOk) {
+        setSubmitError("Aguarde a consulta do CNPJ na Receita Federal.");
+        return;
+      }
+      if (!data.razaoSocial.trim() || data.razaoSocial.trim().length < 2) {
+        setSubmitError(
+          data.empresaManual
+            ? "Preencha a razão social da empresa para continuar."
+            : "Razão social não retornada pela consulta. Preencha os dados da empresa.",
+        );
+        return;
+      }
+    }
 
     if (stepKey === "empresa" && data.tipoPessoa === "pf" && !isValidCPF(data.cpf)) {
       setSubmitError("Informe um CPF válido para continuar.");
@@ -547,14 +576,29 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
   const fmtData = (iso: string) =>
     /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse().join("/") : iso;
 
+  const limparDadosEmpresa = () => {
+    update("razaoSocial", "");
+    update("nomeFantasia", "");
+    update("situacao", "");
+    update("abertura", "");
+    update("porte", "");
+    update("porteCodigo", "");
+    update("natureza", "");
+    update("inscricaoEstadual", "");
+    update("segmento", "");
+    update("cnaes", []);
+  };
+
   const preencherDadosEmpresa = async (digits: string) => {
     setLoading(true);
     update("empresaOk", false);
+    update("empresaManual", false);
     try {
       const res = await consultarCnpj({ data: digits });
       if (!res.ok) {
-        // Não localizado / serviço indisponível → libera preenchimento manual.
-        update("situacao", "");
+        // CNPJ novo ou ainda não indexado na Receita → libera preenchimento manual.
+        limparDadosEmpresa();
+        update("empresaManual", true);
         update("empresaOk", true);
         return;
       }
@@ -578,9 +622,12 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
       update("estado", (d.uf || "").toUpperCase());
       if (d.ddd_telefone_1) update("telefone", maskPhone(d.ddd_telefone_1));
       if (d.email) update("email", d.email.toLowerCase());
+      update("empresaManual", false);
       update("empresaOk", true);
     } catch {
       // fail-open: permite preenchimento manual se a consulta falhar.
+      limparDadosEmpresa();
+      update("empresaManual", true);
       update("empresaOk", true);
     } finally {
       setLoading(false);
@@ -593,6 +640,7 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
     const digits = m.replace(/\D/g, "");
     if (digits.length === 14 && !loading && !checking) {
       update("empresaOk", false);
+      update("empresaManual", false);
       setChecking(true);
       consultarDocumentoExistente({ data: digits })
         .then((res) => {
@@ -674,12 +722,14 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
                 onClick={() => {
                   update("tipoPessoa", opt.key);
                   update("empresaOk", false);
+                  update("empresaManual", false);
                   update("cnpj", "");
                   update("razaoSocial", "");
                   update("nomeFantasia", "");
                   update("situacao", "");
                   update("abertura", "");
                   update("porte", "");
+                  update("natureza", "");
                   setTimeout(() => {
                     (opt.key === "pj" ? cnpjRef : cpfRef).current?.focus();
                   }, 50);
@@ -746,26 +796,96 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           {(loading || data.empresaOk) && (
             <div className="rounded-lg border border-border bg-primary-soft/30 p-5 animate-fade-in">
               <div className="mb-4 flex items-center gap-2">
-                {data.empresaOk ? (
-                  <>
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                    <p className="text-sm font-semibold text-success">Empresa localizada com sucesso.</p>
-                  </>
-                ) : (
+                {loading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     <p className="text-sm font-medium text-primary-deep">Consultando Receita Federal…</p>
                   </>
+                ) : data.empresaManual ? (
+                  <>
+                    <Info className="h-5 w-5 shrink-0 text-amber-500" />
+                    <p className="text-sm font-medium text-foreground">
+                      CNPJ ainda não localizado na base da Receita Federal. Preencha os dados da empresa manualmente para continuar.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <p className="text-sm font-semibold text-success">Empresa localizada com sucesso.</p>
+                  </>
                 )}
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <ReadOnly label="Razão Social" value={data.razaoSocial} loading={loading} />
-                <ReadOnly label="Nome Fantasia" value={data.nomeFantasia} loading={loading} />
-                <ReadOnly label="Situação Cadastral" value={data.situacao} loading={loading} badge="success" />
-                <ReadOnly label="Data de Abertura" value={data.abertura} loading={loading} />
-                <ReadOnly label="Porte" value={data.porte} loading={loading} />
-                <ReadOnly label="Natureza Jurídica" value={data.empresaOk ? "Sociedade Empresária Limitada" : ""} loading={loading} />
-              </div>
+
+              {data.empresaManual && !loading ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Razão Social" required className="sm:col-span-2">
+                    <Input
+                      value={data.razaoSocial}
+                      onChange={(e) => update("razaoSocial", e.target.value)}
+                      placeholder="Razão social conforme contrato social"
+                      className="h-11"
+                    />
+                  </Field>
+                  <Field label="Nome Fantasia">
+                    <Input
+                      value={data.nomeFantasia}
+                      onChange={(e) => update("nomeFantasia", e.target.value)}
+                      placeholder="Nome fantasia (opcional)"
+                      className="h-11"
+                    />
+                  </Field>
+                  <Field label="Situação Cadastral">
+                    <Input
+                      value={data.situacao}
+                      onChange={(e) => update("situacao", e.target.value)}
+                      placeholder="Ex.: Ativa"
+                      className="h-11"
+                    />
+                  </Field>
+                  <Field label="Data de Abertura">
+                    <Input
+                      value={data.abertura}
+                      onChange={(e) => update("abertura", maskDateBR(e.target.value))}
+                      placeholder="DD/MM/AAAA"
+                      className="h-11 font-mono"
+                      inputMode="numeric"
+                    />
+                  </Field>
+                  <Field label="Porte">
+                    <Input
+                      value={data.porte}
+                      onChange={(e) => update("porte", e.target.value)}
+                      placeholder="Ex.: MEI, ME, EPP"
+                      className="h-11"
+                    />
+                  </Field>
+                  <Field label="Natureza Jurídica">
+                    <Input
+                      value={data.natureza}
+                      onChange={(e) => update("natureza", e.target.value)}
+                      placeholder="Ex.: Sociedade Empresária Limitada"
+                      className="h-11"
+                    />
+                  </Field>
+                  <Field label="Atividade Principal (CNAE)" className="sm:col-span-2">
+                    <Input
+                      value={data.segmento}
+                      onChange={(e) => update("segmento", e.target.value)}
+                      placeholder="Descrição da atividade principal"
+                      className="h-11"
+                    />
+                  </Field>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ReadOnly label="Razão Social" value={data.razaoSocial} loading={loading} />
+                  <ReadOnly label="Nome Fantasia" value={data.nomeFantasia} loading={loading} />
+                  <ReadOnly label="Situação Cadastral" value={data.situacao} loading={loading} badge="success" />
+                  <ReadOnly label="Data de Abertura" value={data.abertura} loading={loading} />
+                  <ReadOnly label="Porte" value={data.porte} loading={loading} />
+                  <ReadOnly label="Natureza Jurídica" value={data.natureza} loading={loading} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -820,6 +940,7 @@ function StepEmpresa({ data, update }: { data: FormState; update: <K extends key
           if (clienteExistenteModal?.tipo === "pf") update("cpf", "");
           else update("cnpj", "");
           update("empresaOk", false);
+          update("empresaManual", false);
           setClienteExistenteModal(null);
         }}
       />
