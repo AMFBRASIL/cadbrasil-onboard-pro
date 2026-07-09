@@ -53,7 +53,10 @@ interface Option {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   aptoImpact: "positive" | "neutral" | "negative";
+  iconBg?: string;
+  iconColor?: string;
 }
+
 
 interface Question {
   id: string;
