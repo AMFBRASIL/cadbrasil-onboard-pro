@@ -206,6 +206,28 @@ const QUESTIONS: Q[] = [
         score: 10,
       },
     ],
+    helpTitle: "O que é SICAF e por que ele é obrigatório?",
+    helpContent: (
+      <>
+        <p>
+          SICAF (Sistema de Cadastros Unificados de Fornecedores) é o cadastro
+          do governo federal que comprova que sua empresa está apta a vender para
+          a administração pública.
+        </p>
+        <p className="mt-2">
+          Com o SICAF ativo, você pode:
+        </p>
+        <ul className="list-disc pl-5 mt-1 space-y-1">
+          <li>Participar de pregões no ComprasNet e no PNCP;</li>
+          <li>Assinar contratos digitais sem burocracia;</li>
+          <li>Receber pagamentos via SIAFI de forma automática.</li>
+        </ul>
+        <p className="mt-2">
+          Se estiver vencido ou inexistente, a CADBRASIL regulariza tudo
+          diretamente no sistema oficial.
+        </p>
+      </>
+    ),
   },
   {
     id: "certificado",
