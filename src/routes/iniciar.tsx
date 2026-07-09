@@ -364,86 +364,89 @@ function IniciarPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-14">
         {!isFinal && currentQuestion && (
-          <section>
-            <div className="mx-auto max-w-3xl">
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                    {currentQuestion.title}
-                  </h1>
-                  <p className="text-muted-foreground mt-2 text-base md:text-lg">
-                    {currentQuestion.subtitle}
-                  </p>
+          <Card className="p-6 md:p-10 border shadow-sm">
+            <section>
+              <div className="mx-auto max-w-3xl">
+                <div className="mb-8 flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                      {currentQuestion.title}
+                    </h1>
+                    <p className="text-muted-foreground mt-2 text-base md:text-lg">
+                      {currentQuestion.subtitle}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setHelpOpen(currentQuestion.id)}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    O que é?
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setHelpOpen(currentQuestion.id)}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  O que é?
-                </button>
-              </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                {currentQuestion.options.map((opt) => {
-                  const Icon = opt.icon;
-                  const selected = answers[currentQuestion.id] === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleSelect(opt.value)}
-                      className={`group relative text-left rounded-2xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
-                        selected
-                          ? "border-primary ring-2 ring-primary/20 shadow-md"
-                          : "border-border"
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`h-12 w-12 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
-                            selected ? "bg-primary text-primary-foreground" : `${opt.iconBg ?? "bg-primary/10"} ${opt.iconColor ?? "text-primary"}`
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-base md:text-lg">
-                            {opt.label}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {currentQuestion.options.map((opt) => {
+                    const Icon = opt.icon;
+                    const selected = answers[currentQuestion.id] === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleSelect(opt.value)}
+                        className={`group relative text-left rounded-2xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
+                          selected
+                            ? "border-primary ring-2 ring-primary/20 shadow-md"
+                            : "border-border"
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`h-12 w-12 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                              selected ? "bg-primary text-primary-foreground" : `${opt.iconBg ?? "bg-primary/10"} ${opt.iconColor ?? "text-primary"}`
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
                           </div>
-                          <div className="text-sm text-muted-foreground mt-0.5">
-                            {opt.description}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-base md:text-lg">
+                              {opt.label}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-0.5">
+                              {opt.description}
+                            </div>
                           </div>
+                          <ArrowRight
+                            className={`h-5 w-5 shrink-0 transition-transform ${
+                              selected
+                                ? "text-primary translate-x-0.5"
+                                : "text-muted-foreground group-hover:text-primary"
+                            }`}
+                          />
                         </div>
-                        <ArrowRight
-                          className={`h-5 w-5 shrink-0 transition-transform ${
-                            selected
-                              ? "text-primary translate-x-0.5"
-                              : "text-muted-foreground group-hover:text-primary"
-                          }`}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-              <div className="mt-8 flex items-center justify-between">
-                {step > 0 ? (
-                  <Button variant="ghost" onClick={handleBack} size="sm">
-                    <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-                  </Button>
-                ) : (
-                  <span />
-                )}
-                <span className="text-sm text-muted-foreground">
-                  Suas respostas não são armazenadas
-                </span>
+                <div className="mt-8 flex items-center justify-between">
+                  {step > 0 ? (
+                    <Button variant="ghost" onClick={handleBack} size="sm">
+                      <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+                    </Button>
+                  ) : (
+                    <span />
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    Suas respostas não são armazenadas
+                  </span>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </Card>
         )}
+
 
 
         {isFinal && (
