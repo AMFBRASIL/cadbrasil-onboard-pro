@@ -157,6 +157,25 @@ const QUESTIONS: Q[] = [
         score: 25,
       },
     ],
+    helpTitle: "Como definimos oportunidades compatíveis?",
+    helpContent: (
+      <>
+        <p>
+          O governo compra de R$ 38 bilhões por ano, mas cada edital tem regras
+          de participação, tamanho de empresa e valor estimado.
+        </p>
+        <p className="mt-2">
+          Ao informar sua ambição de faturamento, nosso algoritmo filtra
+          automaticamente as licitações que combinam com o porte da sua empresa
+          e com seu histórico, evitando editais muito acima ou muito abaixo da
+          sua realidade.
+        </p>
+        <p className="mt-2">
+          Não existe meta mínima: enviamos oportunidades desde R$ 5 mil até
+          contratos de milhões.
+        </p>
+      </>
+    ),
   },
   {
     id: "sicaf",
