@@ -32,10 +32,10 @@ export function Header() {
           <Logo />
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-              CADBRASIL
+              Credenciamento Nacional de Fornecedores
             </p>
             <h1 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">
-              Credenciamento Nacional de Fornecedores
+              CADBRASIL Oficial ®
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Regularize sua empresa para participação em licitações públicas.
