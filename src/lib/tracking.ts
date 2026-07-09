@@ -39,6 +39,120 @@ export const CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM = {
   utm_content: "diagnostico_credenciamento",
 } as const;
 
+/** utm_content ao clicar no CTA para o cadastro a partir do diagnóstico. */
+export const CREDENCIAMENTO_CTA_UTM_CONTENT = "cta_credenciamento";
+
+export const TRACKING_QUERY_KEYS = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "gad_source",
+  "gad_campaignid",
+  "msclkid",
+  "fbclid",
+] as const;
+
+export type TrackingSearchParams = Partial<
+  Record<(typeof TRACKING_QUERY_KEYS)[number], string>
+>;
+
+/** Filtra apenas parâmetros de tracking válidos na query da rota. */
+export function parseTrackingSearch(
+  search: Record<string, unknown>,
+): TrackingSearchParams {
+  const result: TrackingSearchParams = {};
+  for (const key of TRACKING_QUERY_KEYS) {
+    const value = search[key];
+    if (typeof value === "string" && value.trim()) {
+      result[key] = value.trim();
+    }
+  }
+  return result;
+}
+
+/** Monta query string de tracking para links ao cadastro (ex.: CTA /credenciamento → /). */
+export function getCadastroTrackingSearch(
+  overrides?: Partial<UtmSeedInput>,
+): TrackingSearchParams {
+  const stored = getUtmParams();
+  const merged = {
+    utm_source:
+      overrides?.utm_source ??
+      stored?.utm_source ??
+      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_source,
+    utm_medium:
+      overrides?.utm_medium ??
+      stored?.utm_medium ??
+      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_medium,
+    utm_campaign:
+      overrides?.utm_campaign ??
+      stored?.utm_campaign ??
+      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_campaign,
+    utm_term: overrides?.utm_term ?? stored?.utm_term ?? "",
+    utm_content:
+      overrides?.utm_content ??
+      stored?.utm_content ??
+      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_content,
+    gclid: stored?.gclid ?? "",
+    gbraid: stored?.gbraid ?? "",
+    wbraid: stored?.wbraid ?? "",
+    gad_source: stored?.gad_source ?? "",
+    gad_campaignid: stored?.gad_campaignid ?? "",
+    msclkid: stored?.msclkid ?? "",
+    fbclid: stored?.fbclid ?? "",
+  };
+
+  const params: TrackingSearchParams = {};
+  for (const key of TRACKING_QUERY_KEYS) {
+    const value = merged[key as keyof typeof merged];
+    if (value) params[key] = value;
+  }
+  return params;
+}
+
+/** Search params do CTA principal do diagnóstico → cadastro. */
+export function getCredenciamentoCtaCadastroSearch(): TrackingSearchParams {
+  return getCadastroTrackingSearch({
+    utm_content: CREDENCIAMENTO_CTA_UTM_CONTENT,
+  });
+}
+
+/** Persiste UTMs a partir dos parâmetros da URL de destino (antes da navegação SPA). */
+export function persistUtmFromSearchParams(search: TrackingSearchParams): void {
+  if (typeof window === "undefined") return;
+
+  const existing = getUtmParams();
+  const utmData: UtmData = {
+    utm_source: search.utm_source ?? existing?.utm_source ?? "",
+    utm_medium: search.utm_medium ?? existing?.utm_medium ?? "",
+    utm_campaign: search.utm_campaign ?? existing?.utm_campaign ?? "",
+    utm_term: search.utm_term ?? existing?.utm_term ?? "",
+    utm_content: search.utm_content ?? existing?.utm_content ?? "",
+    gclid: search.gclid ?? existing?.gclid ?? "",
+    gbraid: search.gbraid ?? existing?.gbraid ?? "",
+    wbraid: search.wbraid ?? existing?.wbraid ?? "",
+    gad_source: search.gad_source ?? existing?.gad_source ?? "",
+    gad_campaignid: search.gad_campaignid ?? existing?.gad_campaignid ?? "",
+    msclkid: search.msclkid ?? existing?.msclkid ?? "",
+    fbclid: search.fbclid ?? existing?.fbclid ?? "",
+    landing_page: existing?.landing_page || window.location.pathname + window.location.search,
+    referrer: existing?.referrer || document.referrer || "",
+    captured_at: new Date().toISOString(),
+  };
+
+  try {
+    persistUtmData(utmData);
+    pushUtmToDataLayer(utmData);
+  } catch (e) {
+    console.warn("[UTM] Erro ao persistir search:", e);
+  }
+}
+
 export type UtmSeedInput = {
   utm_source: string;
   utm_medium: string;
@@ -248,21 +362,6 @@ function resolveEngagementSendTo(): string | undefined {
   if (label) return `${GOOGLE_ADS_ID}/${label}`;
   return undefined;
 }
-
-const TRACKING_QUERY_KEYS = [
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-  "gclid",
-  "gbraid",
-  "wbraid",
-  "gad_source",
-  "gad_campaignid",
-  "msclkid",
-  "fbclid",
-] as const;
 
 /**
  * Captura parâmetros UTM da URL atual e persiste em sessionStorage + localStorage.

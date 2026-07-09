@@ -48,7 +48,9 @@ import {
 } from "@/lib/credenciamento-seo-content";
 import { buildCredenciamentoStructuredData, buildSeoHead } from "@/lib/seo";
 import {
+  getCredenciamentoCtaCadastroSearch,
   initCredenciamentoWhatsappTracking,
+  persistUtmFromSearchParams,
   trackCredenciamentoComplete,
   trackCredenciamentoCtaClick,
   trackCredenciamentoStep,
@@ -870,11 +872,19 @@ function CtaPrincipal({
   score?: number;
   onActivate?: () => void;
 }) {
+  const cadastroSearch = getCredenciamentoCtaCadastroSearch();
+
+  function handleActivate() {
+    persistUtmFromSearchParams(cadastroSearch);
+    onActivate?.();
+  }
+
   return (
     <div className="flex flex-col items-center gap-4">
       <Link
         to="/"
-        onClick={onActivate}
+        search={cadastroSearch}
+        onClick={handleActivate}
         className="group w-full max-w-lg inline-flex items-center justify-center gap-3 h-16 rounded-2xl bg-gradient-to-r from-primary to-primary-deep text-primary-foreground font-bold text-lg hover:opacity-95 transition-all shadow-xl shadow-primary/30 hover:shadow-2xl hover:-translate-y-0.5"
       >
         Ativar meu credenciamento agora

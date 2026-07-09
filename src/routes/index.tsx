@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CadastroWizard } from "@/components/cadastro/CadastroWizard";
 import { SITE_URL } from "@/lib/seo";
+import { parseTrackingSearch } from "@/lib/tracking";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => parseTrackingSearch(search),
   head: () => ({
     meta: [
       { title: "CADBRASIL — Credenciamento Nacional de Fornecedores" },

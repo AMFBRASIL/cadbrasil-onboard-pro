@@ -9,6 +9,10 @@ import {
   CREDENCIAMENTO_SECTIONS,
   CREDENCIAMENTO_TITLE,
 } from "@/lib/credenciamento-seo-content";
+import {
+  getCredenciamentoCtaCadastroSearch,
+  persistUtmFromSearchParams,
+} from "@/lib/tracking";
 import { SEO_PAGES, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const RELATED_PATHS = new Set([
@@ -20,6 +24,11 @@ const RELATED_PATHS = new Set([
 
 export function CredenciamentoSeoBlock() {
   const related = SEO_PAGES.filter((p) => RELATED_PATHS.has(p.path));
+  const cadastroSearch = getCredenciamentoCtaCadastroSearch();
+
+  function handleCadastroClick() {
+    persistUtmFromSearchParams(cadastroSearch);
+  }
 
   return (
     <>
@@ -127,7 +136,7 @@ export function CredenciamentoSeoBlock() {
               apta a participar de licitações em todo o Brasil.
             </p>
             <Button asChild size="lg" className="mt-6 font-semibold">
-              <Link to="/">
+              <Link to="/" search={cadastroSearch} onClick={handleCadastroClick}>
                 Iniciar credenciamento
                 <ArrowRight className="h-4 w-4" />
               </Link>

@@ -250,6 +250,7 @@ function GtmSpaTracker() {
   const searchStr = useRouterState({ select: (s) => s.location.searchStr });
 
   useEffect(() => {
+    captureUtmParams();
     trackVirtualPageView(pathname + searchStr);
   }, [pathname, searchStr]);
 
