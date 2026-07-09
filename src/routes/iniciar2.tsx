@@ -305,6 +305,33 @@ const QUESTIONS: Q[] = [
         score: 5,
       },
     ],
+    helpTitle: "Como funciona o monitoramento de editais?",
+    helpContent: (
+      <>
+        <p>
+          Após o credenciamento, você passa a receber uma curadoria de editais
+          compatíveis com o perfil da sua empresa.
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>
+            <strong>Imediatamente:</strong> prioridade máxima na fila de
+            ativação, primeiro envio em até 24h.
+          </li>
+          <li>
+            <strong>Em 30 dias:</strong> agendamos a ativação para quando você
+            estiver pronto.
+          </li>
+          <li>
+            <strong>Ainda avaliando:</strong> você recebe um material educativo
+            sem compromisso.
+          </li>
+        </ul>
+        <p className="mt-2">
+          Todos os editais chegam com resumo, prazo e link direto para
+          participação.
+        </p>
+      </>
+    ),
   },
 ];
 
