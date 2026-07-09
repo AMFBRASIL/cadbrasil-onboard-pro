@@ -24,6 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { TopBar, Header, InstitutionalFooter, WhatsAppFloating } from "@/components/cadastro/LayoutParts";
+
 
 export const Route = createFileRoute("/iniciar")({
   head: () => ({
@@ -334,37 +336,27 @@ function IniciarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-soft/40 via-background to-background">
-      <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
-              CB
-            </div>
-            <div>
-              <div className="text-sm font-bold leading-none">
-                CADBRASIL Oficial <sup className="text-[10px]">®</sup>
-              </div>
-              <div className="text-xs text-muted-foreground">Credenciamento SICAF</div>
+    <div className="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
+      <TopBar />
+      <Header />
 
-
-            </div>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+      <div className="border-b border-border bg-card">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary-soft/60 px-3 py-1.5 rounded-full">
             <Sparkles className="h-3.5 w-3.5" />
             Preparação do SICAF Comprasnet
+          </div>
+          <div className="flex-1 min-w-[160px]">
+            <Progress value={progress} className="h-2 bg-primary-soft" />
           </div>
           <div className="text-xs md:text-sm text-muted-foreground">
             {isFinal ? "Concluído" : `Etapa ${step + 1} de ${totalSteps}`}
           </div>
         </div>
-        <div className="max-w-4xl mx-auto px-4 pb-3">
-          <Progress value={progress} className="h-2" />
-        </div>
-      </header>
+      </div>
 
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 md:py-14 lg:px-8">
 
-      <main className="max-w-4xl mx-auto px-4 py-8 md:py-14">
         {!isFinal && currentQuestion && (
           <Card className="p-6 md:p-10 border shadow-sm">
             <section>
@@ -551,6 +543,12 @@ function IniciarPage() {
         )}
 
       </main>
+
+      <InstitutionalFooter />
+
+      <WhatsAppFloating />
+
+
 
       <Dialog open={!!helpOpen} onOpenChange={(o) => !o && setHelpOpen(null)}>
         <DialogContent className="max-w-lg">
