@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+import { TopBar, Header, InstitutionalFooter, WhatsAppFloating } from "@/components/cadastro/LayoutParts";
 
 export const Route = createFileRoute("/iniciar")({
   head: () => ({
