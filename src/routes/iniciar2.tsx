@@ -542,6 +542,10 @@ function Iniciar2Page() {
                     />
                     <BigStat icon={Clock} value="24h" label="Para ativação" />
                   </div>
+
+                  <div className="mt-10">
+                    <CtaPrincipal />
+                  </div>
                 </div>
               </div>
 
@@ -605,32 +609,15 @@ function Iniciar2Page() {
                   </p>
                 </div>
 
-                {/* CTA */}
-                <div className="mt-8 flex flex-col items-center gap-4">
-                  <a
-                    href={CADASTRO_URL}
-                    className="group w-full max-w-lg inline-flex items-center justify-center gap-3 h-16 rounded-2xl bg-gradient-to-r from-primary to-primary-deep text-primary-foreground font-bold text-lg hover:opacity-95 transition-all shadow-xl shadow-primary/30 hover:shadow-2xl hover:-translate-y-0.5"
-                  >
-                    Ativar meu credenciamento agora
-                    <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
-                  </a>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-success" />
-                      Pagamento seguro
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <BadgeCheck className="h-3.5 w-3.5 text-success" />
-                      Garantia 7 dias
-                    </span>
-                    <span className="hidden sm:flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-success" />
-                      Ativação em 24h
-                    </span>
-                  </div>
+                {/* CTA final */}
+                <div className="mt-10">
+                  <CtaPrincipal />
+                </div>
+
+                <div className="mt-6 text-center">
                   <button
                     onClick={restart}
-                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 mt-2"
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
                   >
                     Refazer diagnóstico
                   </button>
