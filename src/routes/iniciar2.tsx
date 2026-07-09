@@ -105,6 +105,29 @@ const QUESTIONS: Q[] = [
         score: 10,
       },
     ],
+    helpTitle: "Quem pode vender para o governo?",
+    helpContent: (
+      <>
+        <p>
+          Tanto pessoas físicas (CPF) quanto empresas (CNPJ) podem participar de
+          licitações públicas. A diferença é o universo de editais disponíveis:
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>
+            <strong>Empresa com CNPJ:</strong> acessa compras de todos os
+            valores e órgãos — federal, estadual e municipal.
+          </li>
+          <li>
+            <strong>Pessoa física com CPF:</strong> só pode disputar editais
+            abaixo de determinados limites e em modalidades específicas.
+          </li>
+        </ul>
+        <p className="mt-2">
+          Se você ainda não tem CNPJ, a CADBRASIL abre seu MEI gratuitamente em
+          até 24h para ampliar suas chances.
+        </p>
+      </>
+    ),
   },
   {
     id: "faturamento",
