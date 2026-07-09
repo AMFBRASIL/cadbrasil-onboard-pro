@@ -20,9 +20,18 @@ import {
   BadgeCheck,
   Rocket,
   Star,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   TopBar,
   Header,
@@ -69,6 +78,8 @@ interface Q {
   title: string;
   subtitle: string;
   options: Opt[];
+  helpTitle: string;
+  helpContent: React.ReactNode;
 }
 
 const QUESTIONS: Q[] = [
