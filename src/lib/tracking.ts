@@ -29,6 +29,215 @@ declare global {
 
 const STORAGE_KEY = "cadbrasil_utm";
 const SESSION_ENGAGEMENT_KEY = "cadbrasil_ads_engagement_fired";
+const CREDENCIAMENTO_COMPLETE_PREFIX = "cadbrasil_credenciamento_complete_";
+
+/** Atribuição padrão: tráfego orgânico vindo do WhatsApp para /credenciamento. */
+export const CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM = {
+  utm_source: "whatsapp",
+  utm_medium: "organic",
+  utm_campaign: "whatsapp_organico",
+  utm_content: "diagnostico_credenciamento",
+} as const;
+
+export type UtmSeedInput = {
+  utm_source: string;
+  utm_medium: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+};
+
+function persistUtmData(utmData: UtmData): void {
+  const json = JSON.stringify(utmData);
+  sessionStorage.setItem(STORAGE_KEY, json);
+  localStorage.setItem(STORAGE_KEY, json);
+}
+
+function buildUtmDataFromSeed(seed: UtmSeedInput, existing?: UtmData | null): UtmData {
+  if (typeof window === "undefined") {
+    return {
+      utm_source: seed.utm_source,
+      utm_medium: seed.utm_medium,
+      utm_campaign: seed.utm_campaign || "",
+      utm_term: seed.utm_term || "",
+      utm_content: seed.utm_content || "",
+      gclid: "",
+      gbraid: "",
+      wbraid: "",
+      gad_source: "",
+      gad_campaignid: "",
+      msclkid: "",
+      fbclid: "",
+      landing_page: "",
+      referrer: "",
+      captured_at: new Date().toISOString(),
+    };
+  }
+
+  return {
+    utm_source: seed.utm_source,
+    utm_medium: seed.utm_medium,
+    utm_campaign: seed.utm_campaign || existing?.utm_campaign || "",
+    utm_term: seed.utm_term || existing?.utm_term || "",
+    utm_content: seed.utm_content || existing?.utm_content || "",
+    gclid: existing?.gclid || "",
+    gbraid: existing?.gbraid || "",
+    wbraid: existing?.wbraid || "",
+    gad_source: existing?.gad_source || "",
+    gad_campaignid: existing?.gad_campaignid || "",
+    msclkid: existing?.msclkid || "",
+    fbclid: existing?.fbclid || "",
+    landing_page: existing?.landing_page || window.location.pathname + window.location.search,
+    referrer: existing?.referrer || document.referrer || "",
+    captured_at: new Date().toISOString(),
+  };
+}
+
+/**
+ * Define atribuição UTM no storage (e dataLayer) quando ainda não houver origem capturada.
+ * Usado em landings dedicadas (ex.: /credenciamento via WhatsApp orgânico).
+ */
+export function seedUtmAttribution(
+  seed: UtmSeedInput,
+  options?: { onlyIfEmpty?: boolean },
+): UtmData | null {
+  if (typeof window === "undefined") return null;
+
+  const onlyIfEmpty = options?.onlyIfEmpty ?? true;
+  const existing = getUtmParams();
+  if (onlyIfEmpty && existing?.utm_source) return existing;
+
+  const utmData = buildUtmDataFromSeed(seed, existing);
+  try {
+    persistUtmData(utmData);
+    pushUtmToDataLayer(utmData);
+  } catch (e) {
+    console.warn("[UTM] Erro ao aplicar seed:", e);
+  }
+  return utmData;
+}
+
+/** Publica variáveis UTM no dataLayer para triggers/variáveis do GTM. */
+export function pushUtmToDataLayer(utm: UtmData): void {
+  pushDataLayerEvent("utm_attribution", {
+    utm_source: utm.utm_source,
+    utm_medium: utm.utm_medium,
+    utm_campaign: utm.utm_campaign,
+    utm_term: utm.utm_term,
+    utm_content: utm.utm_content,
+    utmSource: utm.utm_source,
+    utmMedium: utm.utm_medium,
+    utmCampaign: utm.utm_campaign,
+    utmTerm: utm.utm_term,
+    utmContent: utm.utm_content,
+    origem: `${utm.utm_source}_${utm.utm_medium}`,
+    landing_page: utm.landing_page,
+    referrer: utm.referrer,
+    gclid: utm.gclid,
+  });
+}
+
+/** Inicializa tracking da landing /credenciamento (WhatsApp orgânico). */
+export function initCredenciamentoWhatsappTracking(): UtmData | null {
+  const utm =
+    seedUtmAttribution(CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM, { onlyIfEmpty: true }) ??
+    getUtmParams();
+
+  pushDataLayerEvent(GTM_EVENTS.CREDENCIAMENTO_VIEW, {
+    page_path: "/credenciamento",
+    page_title: "Descubra seu potencial em licitações — CADBRASIL",
+    funnel_name: "credenciamento_whatsapp",
+    origem: "whatsapp_organico",
+    utm_source: utm?.utm_source ?? CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_source,
+    utm_medium: utm?.utm_medium ?? CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_medium,
+    utm_campaign: utm?.utm_campaign ?? CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_campaign,
+    utm_content: utm?.utm_content ?? CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_content,
+  });
+
+  pushDataLayerEvent(GTM_EVENTS.FUNNEL_STEP, {
+    funnel_name: "credenciamento_whatsapp",
+    funnel_step: "entrada",
+    funnel_step_name: "Diagnóstico credenciamento — entrada",
+    origem: "whatsapp_organico",
+  });
+
+  return utm;
+}
+
+export function trackCredenciamentoStep(params: {
+  questionId: string;
+  questionLabel: string;
+  answer: string;
+  stepIndex: number;
+  totalSteps: number;
+}): void {
+  const utm = getUtmParams();
+  pushDataLayerEvent(GTM_EVENTS.CREDENCIAMENTO_STEP, {
+    funnel_name: "credenciamento_whatsapp",
+    funnel_step: params.questionId,
+    funnel_step_name: params.questionLabel,
+    step_index: params.stepIndex,
+    total_steps: params.totalSteps,
+    answer: params.answer,
+    origem: "whatsapp_organico",
+    utm_source: utm?.utm_source ?? "",
+    utm_medium: utm?.utm_medium ?? "",
+    utm_campaign: utm?.utm_campaign ?? "",
+  });
+}
+
+export function trackCredenciamentoComplete(params: {
+  score: number;
+  oportunidades: number;
+  tier: string;
+}): void {
+  if (typeof window === "undefined") return;
+
+  const key = `${CREDENCIAMENTO_COMPLETE_PREFIX}${params.score}_${params.tier}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* ignore */
+  }
+
+  const utm = getUtmParams();
+  pushDataLayerEvent(GTM_EVENTS.CREDENCIAMENTO_COMPLETE, {
+    funnel_name: "credenciamento_whatsapp",
+    origem: "whatsapp_organico",
+    score: params.score,
+    oportunidades: params.oportunidades,
+    tier: params.tier,
+    utm_source: utm?.utm_source ?? "",
+    utm_medium: utm?.utm_medium ?? "",
+    utm_campaign: utm?.utm_campaign ?? "",
+  });
+
+  pushDataLayerEvent(GTM_EVENTS.FUNNEL_STEP, {
+    funnel_name: "credenciamento_whatsapp",
+    funnel_step: "diagnostico_concluido",
+    funnel_step_name: "Diagnóstico concluído",
+    score: params.score,
+    origem: "whatsapp_organico",
+  });
+}
+
+export function trackCredenciamentoCtaClick(params: {
+  origem: "cta_principal" | "cta_secundario";
+  score?: number;
+}): void {
+  const utm = getUtmParams();
+  pushDataLayerEvent(GTM_EVENTS.CREDENCIAMENTO_CTA, {
+    origem_cta: params.origem,
+    destino: "/",
+    funnel_name: "credenciamento_whatsapp",
+    origem: "whatsapp_organico",
+    score: params.score,
+    utm_source: utm?.utm_source ?? "",
+    utm_medium: utm?.utm_medium ?? "",
+    utm_campaign: utm?.utm_campaign ?? "",
+  });
+}
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -100,9 +309,7 @@ export function captureUtmParams(): void {
       captured_at: new Date().toISOString(),
     };
 
-    const json = JSON.stringify(utmData);
-    sessionStorage.setItem(STORAGE_KEY, json);
-    localStorage.setItem(STORAGE_KEY, json);
+    persistUtmData(utmData);
   } catch (e) {
     console.warn("[UTM] Erro ao capturar params:", e);
   }

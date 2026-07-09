@@ -21,6 +21,14 @@ export const GTM_EVENTS = {
   FUNNEL_STEP: "funnel_step",
   /** Clique em CTA do portal do fornecedor. */
   PORTAL_CLICK: "portal_fornecedor_click",
+  /** Diagnóstico interativo /credenciamento — entrada. */
+  CREDENCIAMENTO_VIEW: "credenciamento_view",
+  /** Diagnóstico /credenciamento — pergunta respondida. */
+  CREDENCIAMENTO_STEP: "credenciamento_step",
+  /** Diagnóstico /credenciamento — resultado exibido. */
+  CREDENCIAMENTO_COMPLETE: "credenciamento_diagnostico_concluido",
+  /** Clique no CTA para iniciar cadastro a partir do diagnóstico. */
+  CREDENCIAMENTO_CTA: "credenciamento_cta_cadastro",
   /** Engagement automático (opcional, VITE_GADS_ENGAGEMENT_AUTO). */
   ADS_ENGAGEMENT: "ads_conversion_engagement",
 } as const;

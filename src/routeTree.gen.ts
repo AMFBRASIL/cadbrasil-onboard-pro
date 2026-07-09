@@ -15,6 +15,7 @@ import { Route as ProcedimentoLoginSenhaRouteImport } from './routes/procediment
 import { Route as InstaladorAssistenteCadbrasilRouteImport } from './routes/instalador-assistente-cadbrasil'
 import { Route as EmpresaInaptaSicafRouteImport } from './routes/empresa-inapta-sicaf'
 import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento-sicaf'
+import { Route as CredenciamentoRouteImport } from './routes/credenciamento'
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
 import { Route as CadastroSicafPessoaJuridicaRouteImport } from './routes/cadastro-sicaf-pessoa-juridica'
 import { Route as CadastroSicafMeiRouteImport } from './routes/cadastro-sicaf-mei'
@@ -51,6 +52,11 @@ const EmpresaInaptaSicafRoute = EmpresaInaptaSicafRouteImport.update({
 const CredenciamentoSicafRoute = CredenciamentoSicafRouteImport.update({
   id: '/credenciamento-sicaf',
   path: '/credenciamento-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CredenciamentoRoute = CredenciamentoRouteImport.update({
+  id: '/credenciamento',
+  path: '/credenciamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConclusaoCadastroRoute = ConclusaoCadastroRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/instalador-assistente-cadbrasil'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/instalador-assistente-cadbrasil'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
     | '/instalador-assistente-cadbrasil'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   CadastroSicafMeiRoute: typeof CadastroSicafMeiRoute
   CadastroSicafPessoaJuridicaRoute: typeof CadastroSicafPessoaJuridicaRoute
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
+  CredenciamentoRoute: typeof CredenciamentoRoute
   CredenciamentoSicafRoute: typeof CredenciamentoSicafRoute
   EmpresaInaptaSicafRoute: typeof EmpresaInaptaSicafRoute
   InstaladorAssistenteCadbrasilRoute: typeof InstaladorAssistenteCadbrasilRoute
@@ -230,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/credenciamento-sicaf'
       fullPath: '/credenciamento-sicaf'
       preLoaderRoute: typeof CredenciamentoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/credenciamento': {
+      id: '/credenciamento'
+      path: '/credenciamento'
+      fullPath: '/credenciamento'
+      preLoaderRoute: typeof CredenciamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conclusao-cadastro': {
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroSicafMeiRoute: CadastroSicafMeiRoute,
   CadastroSicafPessoaJuridicaRoute: CadastroSicafPessoaJuridicaRoute,
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,
+  CredenciamentoRoute: CredenciamentoRoute,
   CredenciamentoSicafRoute: CredenciamentoSicafRoute,
   EmpresaInaptaSicafRoute: EmpresaInaptaSicafRoute,
   InstaladorAssistenteCadbrasilRoute: InstaladorAssistenteCadbrasilRoute,

@@ -9,6 +9,7 @@ Idioma: pt-BR
 ## Páginas recomendadas para citação (conteúdo público)
 
 - [Início — credenciamento SICAF](https://cadastro.cadbrasil.com.br/): formulário de cadastro e assessoria CADBRASIL para habilitação no SICAF.
+- [Diagnóstico de credenciamento](https://cadastro.cadbrasil.com.br/credenciamento): questionário interativo gratuito (~90s) que avalia potencial em licitações, situação do SICAF, certificado digital e score de prontidão antes do cadastro.
 - [Credenciamento SICAF](https://cadastro.cadbrasil.com.br/credenciamento-sicaf): guia completo sobre como cadastrar a empresa para vender ao governo.
 - [Renovação do SICAF](https://cadastro.cadbrasil.com.br/renovacao-sicaf): renovação anual e manutenção do cadastro SICAF.
 - [Empresa inapta no SICAF](https://cadastro.cadbrasil.com.br/empresa-inapta-sicaf): regularização de empresas inaptas ou com pendências.
