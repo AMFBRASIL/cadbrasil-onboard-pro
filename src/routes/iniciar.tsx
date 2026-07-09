@@ -53,7 +53,10 @@ interface Option {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   aptoImpact: "positive" | "neutral" | "negative";
+  iconBg?: string;
+  iconColor?: string;
 }
+
 
 interface Question {
   id: string;
@@ -83,6 +86,8 @@ const QUESTIONS: Question[] = [
         description: "Já decidi e quero começar o quanto antes.",
         icon: Gavel,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "talvez",
@@ -90,6 +95,8 @@ const QUESTIONS: Question[] = [
         description: "Quero entender melhor antes de decidir.",
         icon: FileSearch,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
       {
         value: "nao",
@@ -97,6 +104,8 @@ const QUESTIONS: Question[] = [
         description: "Estou apenas explorando a plataforma.",
         icon: XCircle,
         aptoImpact: "negative",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
     ],
   },
@@ -116,6 +125,8 @@ const QUESTIONS: Question[] = [
         description: "MEI, ME, EPP, LTDA ou outro tipo societário.",
         icon: Building2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "cpf",
@@ -123,6 +134,8 @@ const QUESTIONS: Question[] = [
         description: "Ainda não tenho empresa aberta.",
         icon: User,
         aptoImpact: "neutral",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
       },
     ],
   },
@@ -142,6 +155,8 @@ const QUESTIONS: Question[] = [
         description: "Acompanho editais e conheço a plataforma.",
         icon: CheckCircle2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "talvez",
@@ -149,6 +164,8 @@ const QUESTIONS: Question[] = [
         description: "Conheço superficialmente, mas nunca operei.",
         icon: FileSearch,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
       {
         value: "nao",
@@ -156,6 +173,8 @@ const QUESTIONS: Question[] = [
         description: "Nunca ouvi falar do PNCP.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
@@ -175,6 +194,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso apenas de manutenção ou renovação.",
         icon: ShieldCheck,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "nao",
@@ -182,6 +203,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso do credenciamento completo.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
       {
         value: "talvez",
@@ -189,6 +212,8 @@ const QUESTIONS: Question[] = [
         description: "Meu cadastro está desatualizado ou vencido.",
         icon: AlertTriangle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
@@ -208,6 +233,8 @@ const QUESTIONS: Question[] = [
         description: "e-CNPJ ou e-CPF dentro da validade.",
         icon: CheckCircle2,
         aptoImpact: "positive",
+        iconBg: "bg-emerald-100",
+        iconColor: "text-emerald-600",
       },
       {
         value: "nao",
@@ -215,6 +242,8 @@ const QUESTIONS: Question[] = [
         description: "Preciso adquirir um certificado.",
         icon: XCircle,
         aptoImpact: "neutral",
+        iconBg: "bg-rose-100",
+        iconColor: "text-rose-600",
       },
       {
         value: "talvez",
@@ -222,10 +251,13 @@ const QUESTIONS: Question[] = [
         description: "Preciso renovar meu certificado.",
         icon: AlertTriangle,
         aptoImpact: "neutral",
+        iconBg: "bg-amber-100",
+        iconColor: "text-amber-600",
       },
     ],
   },
 ];
+
 
 const CADASTRO_URL = "https://cadastro.cadbrasil.com.br";
 
@@ -304,13 +336,16 @@ function IniciarPage() {
     <div className="min-h-screen bg-gradient-to-b from-primary-soft/40 via-background to-background">
       <header className="border-b bg-background/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
               CB
             </div>
             <div>
-              <div className="text-sm font-bold leading-none">CADBRASIL</div>
-              <div className="text-xs text-muted-foreground">Onboarding</div>
+              <div className="text-sm font-bold leading-none">
+                CADBRASIL Oficial (R)
+              </div>
+              <div className="text-xs text-muted-foreground">Credenciamento SICAF</div>
+
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-xs md:text-sm font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
@@ -326,87 +361,93 @@ function IniciarPage() {
         </div>
       </header>
 
+
       <main className="max-w-4xl mx-auto px-4 py-8 md:py-14">
         {!isFinal && currentQuestion && (
-          <section>
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold mb-4">
-                <Sparkles className="h-3.5 w-3.5" />
-                Pergunta {step + 1}
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-                  {currentQuestion.title}
-                </h1>
-                <button
-                  type="button"
-                  onClick={() => setHelpOpen(currentQuestion.id)}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs md:text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  O que é?
-                </button>
-              </div>
-              <p className="text-muted-foreground mt-2 md:text-lg">
-                {currentQuestion.subtitle}
-              </p>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {currentQuestion.options.map((opt) => {
-                const Icon = opt.icon;
-                const selected = answers[currentQuestion.id] === opt.value;
-                return (
+          <Card className="p-6 md:p-10 border shadow-sm">
+            <section>
+              <div className="mx-auto max-w-3xl">
+                <div className="mb-8 flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                      {currentQuestion.title}
+                    </h1>
+                    <p className="text-muted-foreground mt-2 text-base md:text-lg">
+                      {currentQuestion.subtitle}
+                    </p>
+                  </div>
                   <button
-                    key={opt.value}
                     type="button"
-                    onClick={() => handleSelect(opt.value)}
-                    className={`group relative text-left rounded-2xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
-                      selected
-                        ? "border-primary ring-2 ring-primary/20 shadow-md"
-                        : "border-border"
-                    }`}
+                    onClick={() => setHelpOpen(currentQuestion.id)}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                    <HelpCircle className="h-4 w-4" />
+                    O que é?
+                  </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {currentQuestion.options.map((opt) => {
+                    const Icon = opt.icon;
+                    const selected = answers[currentQuestion.id] === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleSelect(opt.value)}
+                        className={`group relative text-left rounded-2xl border-2 p-5 transition-all bg-card hover:border-primary hover:shadow-md hover:-translate-y-0.5 ${
                           selected
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-primary/10 text-primary group-hover:bg-primary/15"
+                            ? "border-primary ring-2 ring-primary/20 shadow-md"
+                            : "border-border"
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm md:text-base">
-                          {opt.label}
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`h-12 w-12 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                              selected ? "bg-primary text-primary-foreground" : `${opt.iconBg ?? "bg-primary/10"} ${opt.iconColor ?? "text-primary"}`
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-base md:text-lg">
+                              {opt.label}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-0.5">
+                              {opt.description}
+                            </div>
+                          </div>
+                          <ArrowRight
+                            className={`h-5 w-5 shrink-0 transition-transform ${
+                              selected
+                                ? "text-primary translate-x-0.5"
+                                : "text-muted-foreground group-hover:text-primary"
+                            }`}
+                          />
                         </div>
-                        <div className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                          {opt.description}
-                        </div>
-                      </div>
-                      <ArrowRight
-                        className={`h-5 w-5 shrink-0 transition-transform ${
-                          selected
-                            ? "text-primary translate-x-0.5"
-                            : "text-muted-foreground group-hover:text-primary"
-                        }`}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-            {step > 0 && (
-              <div className="mt-8 flex justify-center">
-                <Button variant="ghost" onClick={handleBack} size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-                </Button>
+                <div className="mt-8 flex items-center justify-between">
+                  {step > 0 ? (
+                    <Button variant="ghost" onClick={handleBack} size="sm">
+                      <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+                    </Button>
+                  ) : (
+                    <span />
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    Suas respostas não são armazenadas
+                  </span>
+                </div>
               </div>
-            )}
-          </section>
+            </section>
+          </Card>
         )}
+
+
 
         {isFinal && (
           <section>
