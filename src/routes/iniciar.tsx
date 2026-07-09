@@ -544,6 +544,12 @@ function IniciarPage() {
 
       </main>
 
+      <InstitutionalFooter />
+
+      <WhatsAppFloating />
+
+
+
       <Dialog open={!!helpOpen} onOpenChange={(o) => !o && setHelpOpen(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
