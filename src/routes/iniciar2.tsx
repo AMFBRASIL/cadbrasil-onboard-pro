@@ -20,9 +20,18 @@ import {
   BadgeCheck,
   Rocket,
   Star,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   TopBar,
   Header,
@@ -69,6 +78,8 @@ interface Q {
   title: string;
   subtitle: string;
   options: Opt[];
+  helpTitle: string;
+  helpContent: React.ReactNode;
 }
 
 const QUESTIONS: Q[] = [
@@ -94,6 +105,29 @@ const QUESTIONS: Q[] = [
         score: 10,
       },
     ],
+    helpTitle: "Quem pode vender para o governo?",
+    helpContent: (
+      <>
+        <p>
+          Tanto pessoas físicas (CPF) quanto empresas (CNPJ) podem participar de
+          licitações públicas. A diferença é o universo de editais disponíveis:
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>
+            <strong>Empresa com CNPJ:</strong> acessa compras de todos os
+            valores e órgãos — federal, estadual e municipal.
+          </li>
+          <li>
+            <strong>Pessoa física com CPF:</strong> só pode disputar editais
+            abaixo de determinados limites e em modalidades específicas.
+          </li>
+        </ul>
+        <p className="mt-2">
+          Se você ainda não tem CNPJ, a CADBRASIL abre seu MEI gratuitamente em
+          até 24h para ampliar suas chances.
+        </p>
+      </>
+    ),
   },
   {
     id: "faturamento",
@@ -123,6 +157,25 @@ const QUESTIONS: Q[] = [
         score: 25,
       },
     ],
+    helpTitle: "Como definimos oportunidades compatíveis?",
+    helpContent: (
+      <>
+        <p>
+          O governo compra de R$ 38 bilhões por ano, mas cada edital tem regras
+          de participação, tamanho de empresa e valor estimado.
+        </p>
+        <p className="mt-2">
+          Ao informar sua ambição de faturamento, nosso algoritmo filtra
+          automaticamente as licitações que combinam com o porte da sua empresa
+          e com seu histórico, evitando editais muito acima ou muito abaixo da
+          sua realidade.
+        </p>
+        <p className="mt-2">
+          Não existe meta mínima: enviamos oportunidades desde R$ 5 mil até
+          contratos de milhões.
+        </p>
+      </>
+    ),
   },
   {
     id: "sicaf",
@@ -153,6 +206,28 @@ const QUESTIONS: Q[] = [
         score: 10,
       },
     ],
+    helpTitle: "O que é SICAF e por que ele é obrigatório?",
+    helpContent: (
+      <>
+        <p>
+          SICAF (Sistema de Cadastros Unificados de Fornecedores) é o cadastro
+          do governo federal que comprova que sua empresa está apta a vender para
+          a administração pública.
+        </p>
+        <p className="mt-2">
+          Com o SICAF ativo, você pode:
+        </p>
+        <ul className="list-disc pl-5 mt-1 space-y-1">
+          <li>Participar de pregões no ComprasNet e no PNCP;</li>
+          <li>Assinar contratos digitais sem burocracia;</li>
+          <li>Receber pagamentos via SIAFI de forma automática.</li>
+        </ul>
+        <p className="mt-2">
+          Se estiver vencido ou inexistente, a CADBRASIL regulariza tudo
+          diretamente no sistema oficial.
+        </p>
+      </>
+    ),
   },
   {
     id: "certificado",
@@ -182,6 +257,27 @@ const QUESTIONS: Q[] = [
         score: 5,
       },
     ],
+    helpTitle: "Por que preciso de Certificado Digital?",
+    helpContent: (
+      <>
+        <p>
+          O Certificado Digital (e-CNPJ para empresas ou e-CPF para pessoas
+          físicas) garante sua identidade nos portais de compras públicas.
+        </p>
+        <p className="mt-2">
+          Ele é exigido para:
+        </p>
+        <ul className="list-disc pl-5 mt-1 space-y-1">
+          <li>Acessar o ComprasNet e o PNCP com segurança;</li>
+          <li>Assinar propostas e contratos digitalmente;</li>
+          <li>Comprovar representação legal da empresa.</li>
+        </ul>
+        <p className="mt-2">
+          Se você não tem certificado ou ele está vencido, a CADBRASIL emite um
+          novo com validade de 1 ano ou 3 anos, conforme a sua necessidade.
+        </p>
+      </>
+    ),
   },
   {
     id: "urgencia",
@@ -209,6 +305,33 @@ const QUESTIONS: Q[] = [
         score: 5,
       },
     ],
+    helpTitle: "Como funciona o monitoramento de editais?",
+    helpContent: (
+      <>
+        <p>
+          Após o credenciamento, você passa a receber uma curadoria de editais
+          compatíveis com o perfil da sua empresa.
+        </p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>
+            <strong>Imediatamente:</strong> prioridade máxima na fila de
+            ativação, primeiro envio em até 24h.
+          </li>
+          <li>
+            <strong>Em 30 dias:</strong> agendamos a ativação para quando você
+            estiver pronto.
+          </li>
+          <li>
+            <strong>Ainda avaliando:</strong> você recebe um material educativo
+            sem compromisso.
+          </li>
+        </ul>
+        <p className="mt-2">
+          Todos os editais chegam com resumo, prazo e link direto para
+          participação.
+        </p>
+      </>
+    ),
   },
 ];
 
@@ -341,9 +464,30 @@ function Iniciar2Page() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
                 {currentQ.eyebrow}
               </p>
-              <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-                {currentQ.title}
-              </h1>
+              <div className="mt-3 flex items-start justify-between gap-4">
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+                  {currentQ.title}
+                </h1>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      O que é?
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{currentQ.helpTitle}</DialogTitle>
+                    </DialogHeader>
+                    <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
+                      {currentQ.helpContent}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <p className="mt-3 text-base md:text-lg text-muted-foreground max-w-2xl">
                 {currentQ.subtitle}
               </p>
