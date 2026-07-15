@@ -10,6 +10,7 @@ Idioma: pt-BR
 
 - [Início — credenciamento SICAF](https://cadastro.cadbrasil.com.br/): formulário de cadastro e assessoria CADBRASIL para habilitação no SICAF.
 - [Diagnóstico de credenciamento](https://cadastro.cadbrasil.com.br/credenciamento): questionário interativo gratuito (~90s) que avalia potencial em licitações, situação do SICAF, certificado digital e score de prontidão antes do cadastro.
+- [Solicitação de cancelamento](https://cadastro.cadbrasil.com.br/solicitacao-cancelamento): protocolo de cancelamento com consulta por CNPJ, motivos, dados de reembolso e opção de reverter para acompanhamento de licitações.
 - [Credenciamento SICAF](https://cadastro.cadbrasil.com.br/credenciamento-sicaf): guia completo sobre como cadastrar a empresa para vender ao governo.
 - [Renovação do SICAF](https://cadastro.cadbrasil.com.br/renovacao-sicaf): renovação anual e manutenção do cadastro SICAF.
 - [Empresa inapta no SICAF](https://cadastro.cadbrasil.com.br/empresa-inapta-sicaf): regularização de empresas inaptas ou com pendências.
@@ -19,6 +20,7 @@ Idioma: pt-BR
 ## Não citar / não indexar
 
 - `/conclusao-cadastro` — página transacional pós-cadastro com dados privados (protocolo, empresa). Marcada como `noindex, nofollow`.
+- `/conclusao-cancelamento` — página transacional pós-cancelamento com protocolo. Marcada como `noindex, nofollow`.
 
 ## Sobre a CADBRASIL
 

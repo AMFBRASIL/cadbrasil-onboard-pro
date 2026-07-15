@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SolicitacaoCancelamentoRouteImport } from './routes/solicitacao-cancelamento'
 import { Route as RenovacaoSicafRouteImport } from './routes/renovacao-sicaf'
 import { Route as ProcedimentosCadbrasilRouteImport } from './routes/procedimentos-cadbrasil'
 import { Route as ProcedimentoLoginSenhaRouteImport } from './routes/procedimento-login-senha'
@@ -16,6 +17,7 @@ import { Route as InstaladorAssistenteCadbrasilRouteImport } from './routes/inst
 import { Route as EmpresaInaptaSicafRouteImport } from './routes/empresa-inapta-sicaf'
 import { Route as CredenciamentoSicafRouteImport } from './routes/credenciamento-sicaf'
 import { Route as CredenciamentoRouteImport } from './routes/credenciamento'
+import { Route as ConclusaoCancelamentoRouteImport } from './routes/conclusao-cancelamento'
 import { Route as ConclusaoCadastroRouteImport } from './routes/conclusao-cadastro'
 import { Route as CadastroSicafPessoaJuridicaRouteImport } from './routes/cadastro-sicaf-pessoa-juridica'
 import { Route as CadastroSicafMeiRouteImport } from './routes/cadastro-sicaf-mei'
@@ -23,6 +25,11 @@ import { Route as AssistenteAjudaRouteImport } from './routes/assistente-ajuda'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SolicitacaoCancelamentoRoute = SolicitacaoCancelamentoRouteImport.update({
+  id: '/solicitacao-cancelamento',
+  path: '/solicitacao-cancelamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
   id: '/renovacao-sicaf',
   path: '/renovacao-sicaf',
@@ -57,6 +64,11 @@ const CredenciamentoSicafRoute = CredenciamentoSicafRouteImport.update({
 const CredenciamentoRoute = CredenciamentoRouteImport.update({
   id: '/credenciamento',
   path: '/credenciamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConclusaoCancelamentoRoute = ConclusaoCancelamentoRouteImport.update({
+  id: '/conclusao-cancelamento',
+  path: '/conclusao-cancelamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConclusaoCadastroRoute = ConclusaoCadastroRouteImport.update({
@@ -98,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/conclusao-cancelamento': typeof ConclusaoCancelamentoRoute
   '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
@@ -105,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
+  '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -113,6 +127,7 @@ export interface FileRoutesByTo {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/conclusao-cancelamento': typeof ConclusaoCancelamentoRoute
   '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
@@ -120,6 +135,7 @@ export interface FileRoutesByTo {
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
+  '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -129,6 +145,7 @@ export interface FileRoutesById {
   '/cadastro-sicaf-mei': typeof CadastroSicafMeiRoute
   '/cadastro-sicaf-pessoa-juridica': typeof CadastroSicafPessoaJuridicaRoute
   '/conclusao-cadastro': typeof ConclusaoCadastroRoute
+  '/conclusao-cancelamento': typeof ConclusaoCancelamentoRoute
   '/credenciamento': typeof CredenciamentoRoute
   '/credenciamento-sicaf': typeof CredenciamentoSicafRoute
   '/empresa-inapta-sicaf': typeof EmpresaInaptaSicafRoute
@@ -136,6 +153,7 @@ export interface FileRoutesById {
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
+  '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -146,6 +164,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/conclusao-cancelamento'
     | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
@@ -153,6 +172,7 @@ export interface FileRouteTypes {
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
     | '/renovacao-sicaf'
+    | '/solicitacao-cancelamento'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +181,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/conclusao-cancelamento'
     | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
@@ -168,6 +189,7 @@ export interface FileRouteTypes {
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
     | '/renovacao-sicaf'
+    | '/solicitacao-cancelamento'
   id:
     | '__root__'
     | '/'
@@ -176,6 +198,7 @@ export interface FileRouteTypes {
     | '/cadastro-sicaf-mei'
     | '/cadastro-sicaf-pessoa-juridica'
     | '/conclusao-cadastro'
+    | '/conclusao-cancelamento'
     | '/credenciamento'
     | '/credenciamento-sicaf'
     | '/empresa-inapta-sicaf'
@@ -183,6 +206,7 @@ export interface FileRouteTypes {
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
     | '/renovacao-sicaf'
+    | '/solicitacao-cancelamento'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -192,6 +216,7 @@ export interface RootRouteChildren {
   CadastroSicafMeiRoute: typeof CadastroSicafMeiRoute
   CadastroSicafPessoaJuridicaRoute: typeof CadastroSicafPessoaJuridicaRoute
   ConclusaoCadastroRoute: typeof ConclusaoCadastroRoute
+  ConclusaoCancelamentoRoute: typeof ConclusaoCancelamentoRoute
   CredenciamentoRoute: typeof CredenciamentoRoute
   CredenciamentoSicafRoute: typeof CredenciamentoSicafRoute
   EmpresaInaptaSicafRoute: typeof EmpresaInaptaSicafRoute
@@ -199,10 +224,18 @@ export interface RootRouteChildren {
   ProcedimentoLoginSenhaRoute: typeof ProcedimentoLoginSenhaRoute
   ProcedimentosCadbrasilRoute: typeof ProcedimentosCadbrasilRoute
   RenovacaoSicafRoute: typeof RenovacaoSicafRoute
+  SolicitacaoCancelamentoRoute: typeof SolicitacaoCancelamentoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/solicitacao-cancelamento': {
+      id: '/solicitacao-cancelamento'
+      path: '/solicitacao-cancelamento'
+      fullPath: '/solicitacao-cancelamento'
+      preLoaderRoute: typeof SolicitacaoCancelamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/renovacao-sicaf': {
       id: '/renovacao-sicaf'
       path: '/renovacao-sicaf'
@@ -250,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/credenciamento'
       fullPath: '/credenciamento'
       preLoaderRoute: typeof CredenciamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conclusao-cancelamento': {
+      id: '/conclusao-cancelamento'
+      path: '/conclusao-cancelamento'
+      fullPath: '/conclusao-cancelamento'
+      preLoaderRoute: typeof ConclusaoCancelamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conclusao-cadastro': {
@@ -304,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroSicafMeiRoute: CadastroSicafMeiRoute,
   CadastroSicafPessoaJuridicaRoute: CadastroSicafPessoaJuridicaRoute,
   ConclusaoCadastroRoute: ConclusaoCadastroRoute,
+  ConclusaoCancelamentoRoute: ConclusaoCancelamentoRoute,
   CredenciamentoRoute: CredenciamentoRoute,
   CredenciamentoSicafRoute: CredenciamentoSicafRoute,
   EmpresaInaptaSicafRoute: EmpresaInaptaSicafRoute,
@@ -311,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcedimentoLoginSenhaRoute: ProcedimentoLoginSenhaRoute,
   ProcedimentosCadbrasilRoute: ProcedimentosCadbrasilRoute,
   RenovacaoSicafRoute: RenovacaoSicafRoute,
+  SolicitacaoCancelamentoRoute: SolicitacaoCancelamentoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

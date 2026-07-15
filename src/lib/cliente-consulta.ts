@@ -1,19 +1,24 @@
-import { createServerFn } from "@tanstack/react-start";
-import type { ConsultaDocumentoResult } from "./cliente-consulta-types";
-
 export type {
   ClienteExistenteDetalhe,
   ConsultaDocumentoResult,
+  ContratoDetalheConsulta,
   EtapaSicaf,
   EtapaSicafStatus,
+  PagamentoDetalheConsulta,
+  SicafDetalheConsulta,
+  SicafNivelDetalhe,
 } from "./cliente-consulta-types";
+
+import { createServerFn } from "@tanstack/react-start";
+import type { ConsultaDocumentoResult } from "./cliente-consulta-types";
 
 function onlyDigits(value: string): string {
   return (value || "").replace(/\D/g, "");
 }
 
 /**
- * Verifica se CPF/CNPJ já existe e, quando existir, retorna o status das etapas SICAF.
+ * Verifica se CPF/CNPJ já existe e, quando existir, retorna o status das etapas SICAF,
+ * detalhes de níveis e histórico de pagamentos/taxas.
  */
 export const consultarDocumentoExistente = createServerFn({ method: "GET" })
   .inputValidator((documento: string) => {

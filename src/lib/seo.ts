@@ -268,6 +268,7 @@ export function buildCredenciamentoStructuredData({
 
 export const SEO_PAGES: { path: string; label: string }[] = [
   { path: "/credenciamento", label: "Diagnóstico de credenciamento" },
+  { path: "/solicitacao-cancelamento", label: "Solicitação de cancelamento" },
   { path: "/assistente-ajuda", label: "Assistente — acesso ao SICAF" },
   { path: "/instalador-assistente-cadbrasil", label: "Instalar o Assistente" },
   { path: "/procedimento-login-senha", label: "Login e senha no portal" },

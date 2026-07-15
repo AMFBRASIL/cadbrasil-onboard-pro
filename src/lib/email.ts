@@ -109,11 +109,42 @@ export async function postSendCron(payload: EmailApiPayload): Promise<unknown> {
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+      const text = await res.text();
+      let json: unknown = null;
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch {
+        json = { raw: text };
       }
-      return await res.json();
+
+      const okApi =
+        res.ok &&
+        (json == null ||
+          typeof json !== "object" ||
+          (json as { sucesso?: boolean }).sucesso !== false);
+
+      if (!okApi) {
+        const errMsg =
+          typeof json === "object" &&
+          json &&
+          "erro" in json &&
+          typeof (json as { erro: unknown }).erro === "string"
+            ? (json as { erro: string }).erro
+            : text || `HTTP ${res.status}`;
+        throw new Error(errMsg);
+      }
+
+      console.log(
+        "[email] postSendCron OK →",
+        payload.email_destino,
+        "| assunto:",
+        payload.assunto,
+        "| fila:",
+        typeof json === "object" && json && "id_fila" in json
+          ? (json as { id_fila: unknown }).id_fila
+          : "n/d",
+      );
+      return json;
     } catch (e) {
       lastError = e;
       const retryable = isRetryableFetchError(e);
@@ -633,4 +664,200 @@ export async function dispararEmailsPosCadastro(d: PosCadastroEmailData): Promis
     });
     if (r.success === false) console.warn("[email] notificação interna:", r.error);
   }
+}
+
+/* ─── Solicitação de cancelamento (equipe documentos) ─── */
+
+const EMAIL_CANCELAMENTO_DESTINO_DEFAULT = "documentos@fornecedordigital.com.br";
+
+export type PosCancelamentoEmailData = {
+  protocolo: string;
+  status: string;
+  documentoMasked: string;
+  razaoSocial: string;
+  protocoloCadastro: string | null;
+  email: string;
+  telefone: string;
+  cidade: string;
+  estado: string;
+  motivosLabels: string[];
+  motivoOutro: string;
+  motivoDetalhe: string;
+  servicoEsperadoLabel: string;
+  servicoEsperadoOutro: string;
+  formaPagamentoLabel: string;
+  titularPagamento: string;
+  chavePix: string;
+  banco: string;
+  agencia: string;
+  conta: string;
+  valorPago: string;
+  dataPagamento: string;
+  desejaMonitoramento: boolean;
+  reverterCancelamento: boolean;
+  observacoes: string;
+};
+
+function getCancelamentoDestino(): string {
+  return (
+    process.env.EMAIL_CANCELAMENTO_DESTINO?.trim() ||
+    EMAIL_CANCELAMENTO_DESTINO_DEFAULT
+  );
+}
+
+function rowHtml(label: string, value: string): string {
+  const v = (value || "").trim() || "—";
+  return `<tr>
+<td style="padding:8px 12px 8px 0;color:#64748b;vertical-align:top;white-space:nowrap;">${escapeHtml(label)}</td>
+<td style="padding:8px 0;color:#0f172a;">${escapeHtml(v).replace(/\n/g, "<br/>")}</td>
+</tr>`;
+}
+
+function getCancelamentoNotificacaoHtml(d: PosCancelamentoEmailData): string {
+  const destaque = d.reverterCancelamento
+    ? "Cliente pediu para REVERTER o cancelamento e manter acompanhamento de licitações."
+    : d.desejaMonitoramento
+      ? "Cliente solicitou cancelamento, mas manifestou interesse em monitoramento de licitações."
+      : "Cliente solicitou cancelamento do serviço.";
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;padding:20px;background:#f8fafc;color:#0f172a;">
+<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+  <div style="background:#1e3a5f;color:#fff;padding:20px 24px;">
+    <p style="margin:0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;">CADBRASIL</p>
+    <h1 style="margin:8px 0 0;font-size:22px;">Solicitação de cancelamento</h1>
+    <p style="margin:8px 0 0;font-size:14px;opacity:.9;">Protocolo <strong>${escapeHtml(d.protocolo)}</strong></p>
+  </div>
+  <div style="padding:20px 24px;">
+    <p style="margin:0 0 16px;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:14px;">
+      ${escapeHtml(destaque)}
+    </p>
+    <h2 style="margin:0 0 8px;font-size:15px;color:#1e3a5f;">Empresa</h2>
+    <table style="border-collapse:collapse;font-size:14px;width:100%;margin-bottom:20px;">
+      ${rowHtml("Razão social", d.razaoSocial)}
+      ${rowHtml("Documento", d.documentoMasked)}
+      ${rowHtml("Protocolo de cadastro", d.protocoloCadastro || "—")}
+      ${rowHtml("E-mail", d.email)}
+      ${rowHtml("Telefone", d.telefone)}
+      ${rowHtml("Cidade/UF", [d.cidade, d.estado].filter(Boolean).join(" / "))}
+      ${rowHtml("Status da solicitação", d.status)}
+    </table>
+
+    <h2 style="margin:0 0 8px;font-size:15px;color:#1e3a5f;">Motivos e expectativa</h2>
+    <table style="border-collapse:collapse;font-size:14px;width:100%;margin-bottom:20px;">
+      ${rowHtml("Motivos", d.motivosLabels.join("; "))}
+      ${rowHtml("Outro motivo", d.motivoOutro)}
+      ${rowHtml("Detalhamento", d.motivoDetalhe)}
+      ${rowHtml("Serviço esperado", d.servicoEsperadoLabel)}
+      ${rowHtml("Serviço (outro)", d.servicoEsperadoOutro)}
+    </table>
+
+    <h2 style="margin:0 0 8px;font-size:15px;color:#1e3a5f;">Dados para reembolso / pagamento</h2>
+    <table style="border-collapse:collapse;font-size:14px;width:100%;margin-bottom:20px;">
+      ${rowHtml("Forma de pagamento", d.formaPagamentoLabel)}
+      ${rowHtml("Titular", d.titularPagamento)}
+      ${rowHtml("Valor pago", d.valorPago)}
+      ${rowHtml("Data do pagamento", d.dataPagamento)}
+      ${rowHtml("Chave PIX", d.chavePix)}
+      ${rowHtml("Banco", d.banco)}
+      ${rowHtml("Agência", d.agencia)}
+      ${rowHtml("Conta", d.conta)}
+    </table>
+
+    <h2 style="margin:0 0 8px;font-size:15px;color:#1e3a5f;">Monitoramento</h2>
+    <table style="border-collapse:collapse;font-size:14px;width:100%;margin-bottom:20px;">
+      ${rowHtml("Deseja monitoramento de licitações", d.desejaMonitoramento ? "Sim" : "Não")}
+      ${rowHtml("Reverter cancelamento", d.reverterCancelamento ? "Sim" : "Não")}
+      ${rowHtml("Observações internas", d.observacoes)}
+    </table>
+
+    <p style="margin:0;font-size:12px;color:#64748b;">
+      E-mail automático gerado em ${escapeHtml(new Date().toLocaleString("pt-BR"))} —
+      destino: ${escapeHtml(getCancelamentoDestino())}
+    </p>
+  </div>
+</div>
+</body></html>`;
+}
+
+function getCancelamentoNotificacaoTexto(d: PosCancelamentoEmailData): string {
+  return [
+    "SOLICITAÇÃO DE CANCELAMENTO — CADBRASIL",
+    `Protocolo: ${d.protocolo}`,
+    `Status: ${d.status}`,
+    "",
+    "EMPRESA",
+    `Razão social: ${d.razaoSocial}`,
+    `Documento: ${d.documentoMasked}`,
+    `Protocolo cadastro: ${d.protocoloCadastro || "—"}`,
+    `E-mail: ${d.email || "—"}`,
+    `Telefone: ${d.telefone || "—"}`,
+    `Cidade/UF: ${[d.cidade, d.estado].filter(Boolean).join(" / ") || "—"}`,
+    "",
+    "MOTIVOS",
+    `Motivos: ${d.motivosLabels.join("; ")}`,
+    `Outro motivo: ${d.motivoOutro || "—"}`,
+    `Detalhe: ${d.motivoDetalhe}`,
+    `Serviço esperado: ${d.servicoEsperadoLabel}`,
+    `Serviço outro: ${d.servicoEsperadoOutro || "—"}`,
+    "",
+    "REEMBOLSO / PAGAMENTO",
+    `Forma: ${d.formaPagamentoLabel}`,
+    `Titular: ${d.titularPagamento}`,
+    `Valor: ${d.valorPago || "—"}`,
+    `Data: ${d.dataPagamento || "—"}`,
+    `PIX: ${d.chavePix || "—"}`,
+    `Banco: ${d.banco || "—"}`,
+    `Agência: ${d.agencia || "—"}`,
+    `Conta: ${d.conta || "—"}`,
+    "",
+    "MONITORAMENTO",
+    `Deseja monitoramento: ${d.desejaMonitoramento ? "Sim" : "Não"}`,
+    `Reverter cancelamento: ${d.reverterCancelamento ? "Sim" : "Não"}`,
+    `Observações: ${d.observacoes}`,
+  ].join("\n");
+}
+
+/** Notifica a equipe (documentos@...) com a solicitação completa de cancelamento. */
+export async function enviarEmailSolicitacaoCancelamento(
+  d: PosCancelamentoEmailData,
+): Promise<{ success: true } | { success: false; error: string }> {
+  if (isEmailApiPlaceholder()) {
+    return { success: false, error: "EMAIL_API_URL é placeholder." };
+  }
+
+  const destino = getCancelamentoDestino();
+  try {
+    const assuntoTipo = d.reverterCancelamento
+      ? "Reversão / monitoramento"
+      : "Cancelamento";
+    const payload: EmailApiPayload = {
+      email_destino: destino,
+      nome_destino: "Documentos CADBRASIL",
+      assunto: `[CADBRASIL] ${assuntoTipo} ${d.protocolo} — ${d.razaoSocial}`,
+      corpo_html: getCancelamentoNotificacaoHtml(d),
+      corpo_texto: getCancelamentoNotificacaoTexto(d),
+      prioridade: 1,
+      max_tentativas: 3,
+      id_dominio: null,
+      data_agendamento: null,
+    };
+    await postSendCron(payload);
+    console.log("[email] Solicitação de cancelamento enviada para", destino, d.protocolo);
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[email] enviarEmailSolicitacaoCancelamento", e);
+    return { success: false, error: msg };
+  }
+}
+
+export async function dispararEmailsPosCancelamento(
+  d: PosCancelamentoEmailData,
+): Promise<{ success: true } | { success: false; error: string }> {
+  const r = await enviarEmailSolicitacaoCancelamento(d);
+  if (r.success === false) {
+    console.warn("[email] cancelamento não notificado:", r.error);
+  }
+  return r;
 }
