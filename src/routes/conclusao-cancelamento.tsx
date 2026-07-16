@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BadgeCheck, Copy, CheckCircle2, ArrowRight, RefreshCw, ClipboardList } from "lucide-react";
+import {
+  BadgeCheck,
+  Copy,
+  CheckCircle2,
+  ArrowRight,
+  RefreshCw,
+  ClipboardList,
+  Clock,
+  ShieldCheck,
+  FileCheck2,
+} from "lucide-react";
 
 import { TopBar, Header, InstitutionalFooter, WhatsAppFloating } from "@/components/cadastro/LayoutParts";
 import { Button } from "@/components/ui/button";
@@ -83,7 +93,7 @@ function ConclusaoCancelamentoPage() {
               ? "Você optou por reverter o cancelamento e seguir com acompanhamento de licitações. Nossa equipe entrará em contato com o alinhamento do serviço."
               : querMonitoramento
                 ? "Registramos seu interesse em monitoramento de licitações junto à solicitação. A equipe analisará o melhor caminho e entrará em contato."
-                : "Sua solicitação foi recebida e será analisada pela equipe CADBRASIL. Guarde o protocolo abaixo para acompanhamento."}
+                : "Sua solicitação foi recebida. Guarde o protocolo abaixo para acompanhamento."}
           </p>
 
           <div className="mt-8 rounded-xl border border-primary/20 bg-primary-soft/50 px-5 py-6">
@@ -108,12 +118,35 @@ function ConclusaoCancelamentoPage() {
             )}
           </div>
 
+          {!foiRevertido && (
+            <div className="mt-6 rounded-xl border border-border bg-muted/30 px-5 py-5 text-left">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary-deep">
+                <Clock className="h-4 w-4 text-primary" />
+                Análise em até 5 dias úteis
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Sua solicitação passará por uma análise de <strong className="text-foreground">5 dias</strong>{" "}
+                para validarmos todos os acessos ao sistema e o contrato assinado, antes de emitir o
+                veredito final.
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                  Validação dos acessos ao sistema e à plataforma CADBRASIL
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <FileCheck2 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                  Conferência do contrato assinado e das condições aplicáveis
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <ClipboardList className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                  Após a análise, você receberá o veredito da solicitação
+                </li>
+              </ul>
+            </div>
+          )}
+
           <ul className="mt-8 space-y-3 text-left text-sm text-muted-foreground">
-            <li className="flex items-start gap-3">
-              <ClipboardList className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-              O prazo de análise e eventual reembolso segue as regras do contrato e da garantia,
-              quando aplicável.
-            </li>
             <li className="flex items-start gap-3">
               <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
               Use o protocolo em qualquer contato com o suporte CADBRASIL.
