@@ -27,7 +27,8 @@ export function CredenciamentoSeoBlock() {
   const cadastroSearch = getCredenciamentoCtaCadastroSearch();
 
   function handleCadastroClick() {
-    persistUtmFromSearchParams(cadastroSearch);
+    const search = getCredenciamentoCtaCadastroSearch();
+    persistUtmFromSearchParams(search);
   }
 
   return (

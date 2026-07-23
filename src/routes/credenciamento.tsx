@@ -50,6 +50,7 @@ import { buildCredenciamentoStructuredData, buildSeoHead } from "@/lib/seo";
 import {
   getCredenciamentoCtaCadastroSearch,
   initCredenciamentoWhatsappTracking,
+  parseTrackingSearch,
   persistUtmFromSearchParams,
   trackCredenciamentoComplete,
   trackCredenciamentoCtaClick,
@@ -80,6 +81,7 @@ const CREDENCIAMENTO_JSON_LD = (() => {
 })();
 
 export const Route = createFileRoute("/credenciamento")({
+  validateSearch: (search: Record<string, unknown>) => parseTrackingSearch(search),
   head: () =>
     buildSeoHead({
       path: PATH,
@@ -872,10 +874,13 @@ function CtaPrincipal({
   score?: number;
   onActivate?: () => void;
 }) {
+  // Recalcula a cada render (inclui UTMs do Google Ads capturados da URL).
   const cadastroSearch = getCredenciamentoCtaCadastroSearch();
 
   function handleActivate() {
-    persistUtmFromSearchParams(cadastroSearch);
+    // Releitura fresca no clique — leva todas as variáveis que chegaram do Ads.
+    const search = getCredenciamentoCtaCadastroSearch();
+    persistUtmFromSearchParams(search);
     onActivate?.();
   }
 

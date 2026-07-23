@@ -7,6 +7,18 @@ export interface UtmData {
   utm_campaign: string;
   utm_term: string;
   utm_content: string;
+  /** ID da campanha Google Ads (`utm_id` / `{campaignid}`). */
+  utm_id: string;
+  /** matchtype: e / p / b */
+  utm_matchtype: string;
+  /** device: m / t / c */
+  utm_device: string;
+  /** network: g / s / d / y */
+  utm_network: string;
+  /** ID do ad group (`{adgroupid}`). */
+  utm_adgroup: string;
+  /** ID do target (`{targetid}`). */
+  utm_target: string;
   gclid: string;
   gbraid: string;
   wbraid: string;
@@ -48,6 +60,12 @@ export const TRACKING_QUERY_KEYS = [
   "utm_campaign",
   "utm_term",
   "utm_content",
+  "utm_id",
+  "utm_matchtype",
+  "utm_device",
+  "utm_network",
+  "utm_adgroup",
+  "utm_target",
   "gclid",
   "gbraid",
   "wbraid",
@@ -56,6 +74,60 @@ export const TRACKING_QUERY_KEYS = [
   "msclkid",
   "fbclid",
 ] as const;
+
+/** Aliases ValueTrack do Google Ads (quando a URL não usa o prefixo utm_). */
+const TRACKING_ALIASES: Record<string, keyof UtmData> = {
+  campaignid: "utm_id",
+  keyword: "utm_term",
+  creative: "utm_content",
+  matchtype: "utm_matchtype",
+  device: "utm_device",
+  network: "utm_network",
+  adgroupid: "utm_adgroup",
+  targetid: "utm_target",
+};
+
+function emptyUtmData(partial?: Partial<UtmData>): UtmData {
+  return {
+    utm_source: "",
+    utm_medium: "",
+    utm_campaign: "",
+    utm_term: "",
+    utm_content: "",
+    utm_id: "",
+    utm_matchtype: "",
+    utm_device: "",
+    utm_network: "",
+    utm_adgroup: "",
+    utm_target: "",
+    gclid: "",
+    gbraid: "",
+    wbraid: "",
+    gad_source: "",
+    gad_campaignid: "",
+    msclkid: "",
+    fbclid: "",
+    landing_page: "",
+    referrer: "",
+    captured_at: new Date().toISOString(),
+    ...partial,
+  };
+}
+
+function normalizeStoredUtm(raw: Partial<UtmData> | null | undefined): UtmData | null {
+  if (!raw || typeof raw !== "object") return null;
+  return emptyUtmData(raw);
+}
+
+function firstParam(params: URLSearchParams, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = params.get(key);
+    if (value && value.trim() && !/^\{.+\}$/.test(value.trim())) {
+      return value.trim();
+    }
+  }
+  return "";
+}
 
 export type TrackingSearchParams = Partial<
   Record<(typeof TRACKING_QUERY_KEYS)[number], string>
@@ -75,29 +147,62 @@ export function parseTrackingSearch(
   return result;
 }
 
+/** Tráfego pago / Google Ads (não sobrescrever UTMs de campanha no CTA). */
+export function hasPaidAdsAttribution(utm: UtmData | null | undefined): boolean {
+  if (!utm) return false;
+  return (
+    utm.utm_medium === "cpc" ||
+    utm.utm_source === "google" ||
+    Boolean(
+      utm.gclid ||
+        utm.gbraid ||
+        utm.wbraid ||
+        utm.utm_id ||
+        utm.utm_adgroup ||
+        utm.utm_matchtype ||
+        utm.utm_device ||
+        utm.utm_network ||
+        utm.gad_campaignid ||
+        utm.gad_source,
+    )
+  );
+}
+
 /** Monta query string de tracking para links ao cadastro (ex.: CTA /credenciamento → /). */
 export function getCadastroTrackingSearch(
   overrides?: Partial<UtmSeedInput>,
 ): TrackingSearchParams {
+  // Garante captura síncrona da URL atual (evita CTA com UTM errado no 1º render).
+  if (typeof window !== "undefined") captureUtmParams();
+
   const stored = getUtmParams();
-  const merged = {
+  const paid = hasPaidAdsAttribution(stored);
+
+  // Em Ads, não aplicar fallback WhatsApp — leva só o que veio da campanha (+ storage).
+  const merged: Record<(typeof TRACKING_QUERY_KEYS)[number], string> = {
     utm_source:
       overrides?.utm_source ??
       stored?.utm_source ??
-      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_source,
+      (paid ? "" : CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_source),
     utm_medium:
       overrides?.utm_medium ??
       stored?.utm_medium ??
-      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_medium,
+      (paid ? "" : CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_medium),
     utm_campaign:
       overrides?.utm_campaign ??
       stored?.utm_campaign ??
-      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_campaign,
+      (paid ? "" : CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_campaign),
     utm_term: overrides?.utm_term ?? stored?.utm_term ?? "",
     utm_content:
       overrides?.utm_content ??
       stored?.utm_content ??
-      CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_content,
+      (paid ? "" : CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM.utm_content),
+    utm_id: stored?.utm_id ?? "",
+    utm_matchtype: stored?.utm_matchtype ?? "",
+    utm_device: stored?.utm_device ?? "",
+    utm_network: stored?.utm_network ?? "",
+    utm_adgroup: stored?.utm_adgroup ?? "",
+    utm_target: stored?.utm_target ?? "",
     gclid: stored?.gclid ?? "",
     gbraid: stored?.gbraid ?? "",
     wbraid: stored?.wbraid ?? "",
@@ -109,14 +214,25 @@ export function getCadastroTrackingSearch(
 
   const params: TrackingSearchParams = {};
   for (const key of TRACKING_QUERY_KEYS) {
-    const value = merged[key as keyof typeof merged];
+    const value = merged[key];
     if (value) params[key] = value;
   }
   return params;
 }
 
-/** Search params do CTA principal do diagnóstico → cadastro. */
+/**
+ * Search params do CTA /credenciamento → cadastro.
+ * Tráfego Google Ads: preserva 100% das variáveis da URL (incl. utm_content={creative}).
+ * Orgânico/WhatsApp: marca utm_content do clique no CTA.
+ */
 export function getCredenciamentoCtaCadastroSearch(): TrackingSearchParams {
+  if (typeof window !== "undefined") captureUtmParams();
+  const stored = getUtmParams();
+
+  if (hasPaidAdsAttribution(stored)) {
+    return getCadastroTrackingSearch();
+  }
+
   return getCadastroTrackingSearch({
     utm_content: CREDENCIAMENTO_CTA_UTM_CONTENT,
   });
@@ -127,12 +243,18 @@ export function persistUtmFromSearchParams(search: TrackingSearchParams): void {
   if (typeof window === "undefined") return;
 
   const existing = getUtmParams();
-  const utmData: UtmData = {
+  const utmData = emptyUtmData({
     utm_source: search.utm_source ?? existing?.utm_source ?? "",
     utm_medium: search.utm_medium ?? existing?.utm_medium ?? "",
     utm_campaign: search.utm_campaign ?? existing?.utm_campaign ?? "",
     utm_term: search.utm_term ?? existing?.utm_term ?? "",
     utm_content: search.utm_content ?? existing?.utm_content ?? "",
+    utm_id: search.utm_id ?? existing?.utm_id ?? "",
+    utm_matchtype: search.utm_matchtype ?? existing?.utm_matchtype ?? "",
+    utm_device: search.utm_device ?? existing?.utm_device ?? "",
+    utm_network: search.utm_network ?? existing?.utm_network ?? "",
+    utm_adgroup: search.utm_adgroup ?? existing?.utm_adgroup ?? "",
+    utm_target: search.utm_target ?? existing?.utm_target ?? "",
     gclid: search.gclid ?? existing?.gclid ?? "",
     gbraid: search.gbraid ?? existing?.gbraid ?? "",
     wbraid: search.wbraid ?? existing?.wbraid ?? "",
@@ -143,7 +265,7 @@ export function persistUtmFromSearchParams(search: TrackingSearchParams): void {
     landing_page: existing?.landing_page || window.location.pathname + window.location.search,
     referrer: existing?.referrer || document.referrer || "",
     captured_at: new Date().toISOString(),
-  };
+  });
 
   try {
     persistUtmData(utmData);
@@ -169,31 +291,27 @@ function persistUtmData(utmData: UtmData): void {
 
 function buildUtmDataFromSeed(seed: UtmSeedInput, existing?: UtmData | null): UtmData {
   if (typeof window === "undefined") {
-    return {
+    return emptyUtmData({
       utm_source: seed.utm_source,
       utm_medium: seed.utm_medium,
       utm_campaign: seed.utm_campaign || "",
       utm_term: seed.utm_term || "",
       utm_content: seed.utm_content || "",
-      gclid: "",
-      gbraid: "",
-      wbraid: "",
-      gad_source: "",
-      gad_campaignid: "",
-      msclkid: "",
-      fbclid: "",
-      landing_page: "",
-      referrer: "",
-      captured_at: new Date().toISOString(),
-    };
+    });
   }
 
-  return {
+  return emptyUtmData({
     utm_source: seed.utm_source,
     utm_medium: seed.utm_medium,
     utm_campaign: seed.utm_campaign || existing?.utm_campaign || "",
     utm_term: seed.utm_term || existing?.utm_term || "",
     utm_content: seed.utm_content || existing?.utm_content || "",
+    utm_id: existing?.utm_id || "",
+    utm_matchtype: existing?.utm_matchtype || "",
+    utm_device: existing?.utm_device || "",
+    utm_network: existing?.utm_network || "",
+    utm_adgroup: existing?.utm_adgroup || "",
+    utm_target: existing?.utm_target || "",
     gclid: existing?.gclid || "",
     gbraid: existing?.gbraid || "",
     wbraid: existing?.wbraid || "",
@@ -204,7 +322,7 @@ function buildUtmDataFromSeed(seed: UtmSeedInput, existing?: UtmData | null): Ut
     landing_page: existing?.landing_page || window.location.pathname + window.location.search,
     referrer: existing?.referrer || document.referrer || "",
     captured_at: new Date().toISOString(),
-  };
+  });
 }
 
 /**
@@ -239,6 +357,12 @@ export function pushUtmToDataLayer(utm: UtmData): void {
     utm_campaign: utm.utm_campaign,
     utm_term: utm.utm_term,
     utm_content: utm.utm_content,
+    utm_id: utm.utm_id,
+    utm_matchtype: utm.utm_matchtype,
+    utm_device: utm.utm_device,
+    utm_network: utm.utm_network,
+    utm_adgroup: utm.utm_adgroup,
+    utm_target: utm.utm_target,
     utmSource: utm.utm_source,
     utmMedium: utm.utm_medium,
     utmCampaign: utm.utm_campaign,
@@ -248,11 +372,14 @@ export function pushUtmToDataLayer(utm: UtmData): void {
     landing_page: utm.landing_page,
     referrer: utm.referrer,
     gclid: utm.gclid,
+    gad_campaignid: utm.gad_campaignid,
   });
 }
 
-/** Inicializa tracking da landing /credenciamento (WhatsApp orgânico). */
+/** Inicializa tracking da landing /credenciamento (Ads da URL ou seed WhatsApp). */
 export function initCredenciamentoWhatsappTracking(): UtmData | null {
+  // Prioridade: parâmetros da URL (Google Ads etc.). Seed orgânico só se vazio.
+  captureUtmParams();
   const utm =
     seedUtmAttribution(CREDENCIAMENTO_WHATSAPP_ORGANIC_UTM, { onlyIfEmpty: true }) ??
     getUtmParams();
@@ -383,32 +510,44 @@ export function captureUtmParams(): void {
       }
     }
 
-    const hasTracking = TRACKING_QUERY_KEYS.some((k) => params.has(k));
+    const hasTracking =
+      TRACKING_QUERY_KEYS.some((k) => params.has(k)) ||
+      Object.keys(TRACKING_ALIASES).some((k) => params.has(k));
     if (!hasTracking) return;
 
     const hasGoogleAuto =
       params.has("gclid") || params.has("gad_source") || params.has("gbraid") || params.has("wbraid");
     const hasMsclk = params.has("msclkid");
 
-    const utmData: UtmData = {
-      utm_source: params.get("utm_source") || (hasGoogleAuto ? "google" : hasMsclk ? "bing" : ""),
-      utm_medium: params.get("utm_medium") || (hasGoogleAuto || hasMsclk ? "cpc" : ""),
-      utm_campaign: params.get("utm_campaign") || params.get("gad_campaignid") || "",
-      utm_term: params.get("utm_term") || "",
-      utm_content: params.get("utm_content") || "",
-      gclid: params.get("gclid") || "",
-      gbraid: params.get("gbraid") || "",
-      wbraid: params.get("wbraid") || "",
-      gad_source: params.get("gad_source") || "",
-      gad_campaignid: params.get("gad_campaignid") || "",
-      msclkid: params.get("msclkid") || "",
-      fbclid: params.get("fbclid") || "",
+    const utmId = firstParam(params, "utm_id", "campaignid");
+    const gadCampaignId = firstParam(params, "gad_campaignid") || utmId;
+
+    const utmData = emptyUtmData({
+      utm_source: firstParam(params, "utm_source") || (hasGoogleAuto ? "google" : hasMsclk ? "bing" : ""),
+      utm_medium: firstParam(params, "utm_medium") || (hasGoogleAuto || hasMsclk ? "cpc" : ""),
+      utm_campaign: firstParam(params, "utm_campaign") || gadCampaignId,
+      utm_term: firstParam(params, "utm_term", "keyword"),
+      utm_content: firstParam(params, "utm_content", "creative"),
+      utm_id: utmId,
+      utm_matchtype: firstParam(params, "utm_matchtype", "matchtype"),
+      utm_device: firstParam(params, "utm_device", "device"),
+      utm_network: firstParam(params, "utm_network", "network"),
+      utm_adgroup: firstParam(params, "utm_adgroup", "adgroupid"),
+      utm_target: firstParam(params, "utm_target", "targetid"),
+      gclid: firstParam(params, "gclid"),
+      gbraid: firstParam(params, "gbraid"),
+      wbraid: firstParam(params, "wbraid"),
+      gad_source: firstParam(params, "gad_source"),
+      gad_campaignid: gadCampaignId,
+      msclkid: firstParam(params, "msclkid"),
+      fbclid: firstParam(params, "fbclid"),
       landing_page: window.location.pathname + window.location.search,
       referrer: document.referrer || "",
       captured_at: new Date().toISOString(),
-    };
+    });
 
     persistUtmData(utmData);
+    pushUtmToDataLayer(utmData);
   } catch (e) {
     console.warn("[UTM] Erro ao capturar params:", e);
   }
@@ -418,9 +557,9 @@ export function getUtmParams(): UtmData | null {
   if (typeof window === "undefined") return null;
   try {
     const fromSession = sessionStorage.getItem(STORAGE_KEY);
-    if (fromSession) return JSON.parse(fromSession) as UtmData;
+    if (fromSession) return normalizeStoredUtm(JSON.parse(fromSession) as Partial<UtmData>);
     const fromLocal = localStorage.getItem(STORAGE_KEY);
-    if (fromLocal) return JSON.parse(fromLocal) as UtmData;
+    if (fromLocal) return normalizeStoredUtm(JSON.parse(fromLocal) as Partial<UtmData>);
   } catch (e) {
     console.warn("[UTM] Erro ao ler params:", e);
   }
@@ -435,6 +574,12 @@ export function getUtmForPayload(): Record<string, string> {
     utm_campaign: utm?.utm_campaign || "",
     utm_term: utm?.utm_term || "",
     utm_content: utm?.utm_content || "",
+    utm_id: utm?.utm_id || "",
+    utm_matchtype: utm?.utm_matchtype || "",
+    utm_device: utm?.utm_device || "",
+    utm_network: utm?.utm_network || "",
+    utm_adgroup: utm?.utm_adgroup || "",
+    utm_target: utm?.utm_target || "",
     gclid: utm?.gclid || "",
     gbraid: utm?.gbraid || "",
     wbraid: utm?.wbraid || "",

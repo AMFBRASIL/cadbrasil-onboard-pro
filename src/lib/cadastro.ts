@@ -150,27 +150,47 @@ async function insertTrackingSessao(
       ? crypto.randomUUID()
       : `sess-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
-  const sql = `INSERT INTO tracking_sessoes (
+  const sqlFull = `INSERT INTO tracking_sessoes (
+    session_id, cliente_id, usuario_id,
+    utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+    utm_id, utm_matchtype, utm_device, utm_network, utm_adgroup, utm_target,
+    gclid, gbraid, wbraid, gad_source, gad_campaignid, fbclid, msclkid, landing_page, referrer,
+    user_agent, converted, conversion_type, conversion_at, funnel_step, last_activity_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'signup',NOW(),'signup',NOW())`;
+
+  const sqlLegacy = `INSERT INTO tracking_sessoes (
     session_id, cliente_id, usuario_id,
     utm_source, utm_medium, utm_campaign, utm_term, utm_content,
     gclid, gbraid, wbraid, gad_source, gad_campaignid, fbclid, msclkid, landing_page, referrer,
     user_agent, converted, conversion_type, conversion_at, funnel_step, last_activity_at
   ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,'signup',NOW(),'signup',NOW())`;
 
-  const params = [
+  const baseParams = [
     sessionId,
     clienteId,
     usuarioId,
     norm(tk.utm_source),
     norm(tk.utm_medium),
-    norm(tk.utm_campaign) ?? norm(tk.gad_campaignid),
+    norm(tk.utm_campaign) ?? norm(tk.gad_campaignid) ?? norm(tk.utm_id),
     norm(tk.utm_term),
     norm(tk.utm_content),
+  ];
+
+  const adsParams = [
+    norm(tk.utm_id) ?? norm(tk.gad_campaignid),
+    norm(tk.utm_matchtype),
+    norm(tk.utm_device),
+    norm(tk.utm_network),
+    norm(tk.utm_adgroup),
+    norm(tk.utm_target),
+  ];
+
+  const clickParams = [
     norm(tk.gclid),
     norm(tk.gbraid),
     norm(tk.wbraid),
     norm(tk.gad_source),
-    norm(tk.gad_campaignid),
+    norm(tk.gad_campaignid) ?? norm(tk.utm_id),
     norm(tk.fbclid),
     norm(tk.msclkid),
     norm(tk.landing_page),
@@ -179,8 +199,17 @@ async function insertTrackingSessao(
   ];
 
   try {
-    await pool.execute<ResultSetHeader>(sql, params);
+    await pool.execute<ResultSetHeader>(sqlFull, [...baseParams, ...adsParams, ...clickParams]);
   } catch (e) {
+    if (isMysqlBadField(e)) {
+      try {
+        await pool.execute<ResultSetHeader>(sqlLegacy, [...baseParams, ...clickParams]);
+        return;
+      } catch (e2) {
+        console.warn("[criarCadastro] tracking_sessoes (não bloqueante)", e2);
+        return;
+      }
+    }
     console.warn("[criarCadastro] tracking_sessoes (não bloqueante)", e);
   }
 }

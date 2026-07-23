@@ -242,6 +242,7 @@ Marketing/UTM/conversão (gravado pós-commit, não bloqueante).
 | `cliente_id` | BIGINT FK → `clientes.id` | |
 | `usuario_id` | BIGINT FK → `usuarios.id` | |
 | `utm_source`,`utm_medium`,`utm_campaign`,`utm_term`,`utm_content` | VARCHAR NULL | |
+| `utm_id`,`utm_matchtype`,`utm_device`,`utm_network`,`utm_adgroup`,`utm_target` | VARCHAR NULL | Google Ads ValueTrack (ver `docs/sql/tracking_sessoes_google_ads.sql`) |
 | `gclid`,`gbraid`,`wbraid`,`gad_source`,`gad_campaignid`,`fbclid`,`msclkid` | VARCHAR NULL | |
 | `landing_page`,`referrer` | VARCHAR/TEXT NULL | |
 | `user_agent` | VARCHAR/TEXT NULL | |
