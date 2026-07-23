@@ -116,17 +116,45 @@ function emptyUtmData(partial?: Partial<UtmData>): UtmData {
 
 function normalizeStoredUtm(raw: Partial<UtmData> | null | undefined): UtmData | null {
   if (!raw || typeof raw !== "object") return null;
-  return emptyUtmData(raw);
+  const cleaned: Partial<UtmData> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === "string") {
+      (cleaned as Record<string, string>)[key] = sanitizeTrackingValue(value);
+    } else if (value != null) {
+      (cleaned as Record<string, unknown>)[key] = value;
+    }
+  }
+  return emptyUtmData(cleaned);
 }
 
 function firstParam(params: URLSearchParams, ...keys: string[]): string {
   for (const key of keys) {
     const value = params.get(key);
     if (value && value.trim() && !/^\{.+\}$/.test(value.trim())) {
-      return value.trim();
+      return sanitizeTrackingValue(value);
     }
   }
   return "";
+}
+
+/** Remove aspas JSON acidentais (ex.: `"111"` → `111`). */
+export function sanitizeTrackingValue(raw: string): string {
+  let s = raw.trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"') && s.length >= 2) ||
+    (s.startsWith("'") && s.endsWith("'") && s.length >= 2)
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+function coerceTrackingString(value: unknown): string {
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (typeof value !== "string") return "";
+  return sanitizeTrackingValue(value);
 }
 
 export type TrackingSearchParams = Partial<
@@ -139,9 +167,9 @@ export function parseTrackingSearch(
 ): TrackingSearchParams {
   const result: TrackingSearchParams = {};
   for (const key of TRACKING_QUERY_KEYS) {
-    const value = search[key];
-    if (typeof value === "string" && value.trim()) {
-      result[key] = value.trim();
+    const value = coerceTrackingString(search[key]);
+    if (value && !/^\{.+\}$/.test(value)) {
+      result[key] = value;
     }
   }
   return result;
