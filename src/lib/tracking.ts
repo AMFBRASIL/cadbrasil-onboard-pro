@@ -35,7 +35,8 @@ declare global {
   interface Window {
     gtag?: (...args: [string, ...unknown[]]) => void;
     dataLayer?: Record<string, unknown>[];
-    uetq?: (string | Record<string, unknown>)[];
+    /** Fila UET (array antes do bat.js carregar; objeto UET com .push depois). */
+    uetq?: { push: (...args: unknown[]) => void };
   }
 }
 
@@ -801,11 +802,16 @@ export function trackConversion(
       });
     }
 
-    if (typeof window !== "undefined" && Array.isArray(window.uetq)) {
-      window.uetq.push("event", eventName, {
-        revenue_value: value || 0,
-        currency: "BRL",
-      } as Record<string, unknown>);
+    // Microsoft Ads (Bing UET): antes do bat.js carregar, uetq é um array;
+    // depois vira o objeto UET — ambos aceitam .push.
+    if (typeof window !== "undefined") {
+      window.uetq = window.uetq || [];
+      if (typeof window.uetq.push === "function") {
+        window.uetq.push("event", eventName, {
+          revenue_value: value || 0,
+          currency: "BRL",
+        });
+      }
     }
   } catch (e) {
     console.warn("[Tracking] Erro ao disparar evento:", e);
