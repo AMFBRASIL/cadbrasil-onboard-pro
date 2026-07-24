@@ -119,13 +119,13 @@ const QUESTIONS: Q[] = [
   {
     id: "tipo",
     eyebrow: "01 · Perfil",
-    title: "Como você vai vender ao governo?",
+    title: "Vai participar de alguma licitação?",
     subtitle:
-      "Empresas (CNPJ) acessam 90% dos editais. CPF só participa de modalidades específicas.",
+      "Empresas (CNPJ) acessam 90% dos editais. CPF participa de modalidades específicas.",
     options: [
       {
         value: "cnpj",
-        label: "Tenho empresa (CNPJ)",
+        label: "Sim, tenho empresa (CNPJ)",
         hint: "MEI, ME, EPP, LTDA — libera todos os editais",
         icon: Building2,
         score: 25,
@@ -138,7 +138,7 @@ const QUESTIONS: Q[] = [
         score: 10,
       },
     ],
-    helpTitle: "Quem pode vender para o governo?",
+    helpTitle: "Quem pode participar de licitações?",
     helpContent: (
       <>
         <p>
@@ -165,7 +165,7 @@ const QUESTIONS: Q[] = [
   {
     id: "faturamento",
     eyebrow: "02 · Ambição",
-    title: "Quanto você quer faturar com o governo em 12 meses?",
+    title: "Quanto você quer faturar com licitações em 12 meses?",
     subtitle: "Isso ajuda a calibrar os editais que vamos te enviar.",
     options: [
       {
@@ -194,8 +194,9 @@ const QUESTIONS: Q[] = [
     helpContent: (
       <>
         <p>
-          O governo compra de R$ 38 bilhões por ano, mas cada edital tem regras
-          de participação, tamanho de empresa e valor estimado.
+          O setor público movimenta mais de R$ 38 bilhões por ano em licitações,
+          mas cada edital tem regras de participação, tamanho de empresa e valor
+          estimado.
         </p>
         <p className="mt-2">
           Ao informar sua ambição de faturamento, nosso algoritmo filtra
@@ -244,8 +245,8 @@ const QUESTIONS: Q[] = [
       <>
         <p>
           SICAF (Sistema de Cadastros Unificados de Fornecedores) é o cadastro
-          do governo federal que comprova que sua empresa está apta a vender para
-          a administração pública.
+          oficial que comprova que sua empresa está apta a participar de
+          licitações da administração pública.
         </p>
         <p className="mt-2">
           Com o SICAF ativo, você pode:
@@ -715,9 +716,9 @@ function CredenciamentoPage() {
                   </div>
                   <h2 className="mt-4 text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-3xl">
                     {tier.tone === "success"
-                      ? "Sua empresa está pronta para faturar com o governo."
+                      ? "Sua empresa está pronta para faturar com licitações."
                       : tier.tone === "warn"
-                        ? "Você está muito próximo de vender ao governo."
+                        ? "Você está muito próximo de vencer licitações."
                         : "Vamos preparar sua empresa para licitar."}
                   </h2>
                   <p className="mt-3 text-lg opacity-90 max-w-2xl">
@@ -843,7 +844,7 @@ function CredenciamentoPage() {
               <Testimonial
                 name="Marcos R."
                 empresa="Inovatec Soluções · SP"
-                text="Em 3 meses fechamos R$ 1.8M em contratos com o governo federal. A CADBRASIL cuidou de tudo."
+                text="Em 3 meses fechamos R$ 1.8M em contratos públicos via licitação. A CADBRASIL cuidou de tudo."
               />
               <Testimonial
                 name="Camila F."

@@ -6,26 +6,26 @@ export const CREDENCIAMENTO_TITLE =
   "Diagnóstico gratuito de potencial em licitações públicas — CADBRASIL";
 
 export const CREDENCIAMENTO_DESCRIPTION =
-  "Em cerca de 90 segundos, descubra quanto sua empresa pode faturar vendendo ao governo. Diagnóstico gratuito de aderência ao SICAF, editais compatíveis e próximos passos para credenciamento assistido CADBRASIL.";
+  "Em cerca de 90 segundos, descubra quanto sua empresa pode faturar participando de licitações. Diagnóstico gratuito de aderência ao SICAF, editais compatíveis e próximos passos para credenciamento assistido CADBRASIL.";
 
 export const CREDENCIAMENTO_ABSTRACT =
-  "Ferramenta interativa gratuita da CADBRASIL que avalia o perfil da empresa (CNPJ ou CPF), ambição de faturamento com o governo, situação do SICAF, certificado digital e urgência para receber editais. Ao final, o usuário vê um score de prontidão, estimativa de oportunidades e pode iniciar o credenciamento SICAF assistido em cadastro.cadbrasil.com.br.";
+  "Ferramenta interativa gratuita da CADBRASIL que avalia o perfil da empresa (CNPJ ou CPF), meta de faturamento com licitações, situação do SICAF, certificado digital e urgência para receber editais. Ao final, o usuário vê um score de prontidão, estimativa de oportunidades e pode iniciar o credenciamento SICAF assistido em cadastro.cadbrasil.com.br.";
 
 export const CREDENCIAMENTO_KEYWORDS =
-  "diagnóstico licitações, potencial licitações públicas, credenciamento SICAF, vender ao governo, editais públicos, Compras.gov.br, habilitação fornecedor, quiz licitações, CADBRASIL, SICAF ativo, certificado digital e-CNPJ";
+  "diagnóstico licitações, potencial licitações públicas, credenciamento SICAF, participar de licitações, editais públicos, Compras.gov.br, habilitação fornecedor, quiz licitações, CADBRASIL, SICAF ativo, certificado digital e-CNPJ";
 
 export const CREDENCIAMENTO_FAQS = [
   {
     q: "O que é o diagnóstico de credenciamento da CADBRASIL?",
-    a: "É um questionário interativo gratuito com cinco perguntas sobre perfil da empresa, meta de faturamento com o governo, situação do SICAF, certificado digital e prazo para começar. Em cerca de 90 segundos você recebe um score de prontidão e uma estimativa de editais compatíveis com o seu perfil.",
+    a: "É um questionário interativo gratuito com cinco perguntas sobre perfil da empresa, meta de faturamento com licitações, situação do SICAF, certificado digital e prazo para começar. Em cerca de 90 segundos você recebe um score de prontidão e uma estimativa de editais compatíveis com o seu perfil.",
   },
   {
-    q: "Quem pode vender para o governo — CPF ou CNPJ?",
+    q: "Quem pode participar de licitações — CPF ou CNPJ?",
     a: "Empresas com CNPJ (MEI, ME, EPP, LTDA e demais pessoas jurídicas) acessam a maior parte dos editais federais, estaduais e municipais. Pessoas físicas com CPF podem participar apenas de modalidades e valores específicos previstos em edital. A CADBRASIL pode abrir MEI em até 24h para ampliar oportunidades.",
   },
   {
     q: "O que é o SICAF e por que é obrigatório?",
-    a: "O SICAF (Sistema de Cadastramento Unificado de Fornecedores) é o cadastro oficial do governo federal que comprova a habilitação da empresa para contratar com a Administração Pública. Sem SICAF ativo e em dia, a proposta costuma ser bloqueada em portais como Compras.gov.br e PNCP.",
+    a: "O SICAF (Sistema de Cadastramento Unificado de Fornecedores) é o cadastro oficial que comprova a habilitação da empresa para participar de licitações da Administração Pública. Sem SICAF ativo e em dia, a proposta costuma ser bloqueada em portais como Compras.gov.br e PNCP.",
   },
   {
     q: "Preciso de certificado digital para licitar?",
@@ -47,7 +47,7 @@ export const CREDENCIAMENTO_HOWTO_STEPS = [
     text: "Indique se você vende como empresa com CNPJ ou como pessoa física. Empresas acessam mais editais; sem CNPJ, a CADBRASIL pode orientar abertura de MEI.",
   },
   {
-    name: "Defina sua meta de faturamento com o governo",
+    name: "Defina sua meta de faturamento com licitações",
     text: "Escolha a faixa de faturamento desejada em 12 meses para calibrar editais compatíveis com o porte e histórico da empresa.",
   },
   {
@@ -68,14 +68,14 @@ export const CREDENCIAMENTO_SECTIONS = [
   {
     heading: "Como funciona o diagnóstico",
     paragraphs: [
-      "O diagnóstico CADBRASIL foi criado para empresas e empreendedores que querem vender ao governo mas não sabem por onde começar. Em cinco perguntas objetivas, avaliamos aderência ao mercado público, gaps de habilitação (SICAF, certificado digital) e urgência comercial.",
+      "O diagnóstico CADBRASIL foi criado para empresas e empreendedores que querem participar de licitações mas não sabem por onde começar. Em cinco perguntas objetivas, avaliamos aderência ao mercado público, gaps de habilitação (SICAF, certificado digital) e urgência comercial.",
       "Ao concluir, você visualiza um índice de prontidão, estimativa de oportunidades de editais alinhadas ao seu perfil e um caminho claro para o credenciamento assistido — sem custo para realizar o diagnóstico.",
     ],
   },
   {
     heading: "Por que o mercado público importa",
     paragraphs: [
-      "O governo brasileiro movimenta dezenas de bilhões de reais por ano em compras de produtos e serviços. Pregões eletrônicos, dispensas e concorrências estão disponíveis no Compras.gov.br, PNCP e portais estaduais e municipais.",
+      "O setor público brasileiro movimenta dezenas de bilhões de reais por ano em licitações de produtos e serviços. Pregões eletrônicos, dispensas e concorrências estão disponíveis no Compras.gov.br, PNCP e portais estaduais e municipais.",
       "Estar credenciado no SICAF e com documentação em dia é o pré-requisito para transformar esse mercado em receita previsível para sua empresa.",
     ],
   },
