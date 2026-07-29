@@ -15,3 +15,8 @@ export function gerarProtocoloCadbrasil(): string {
 export function gerarProtocoloCancelamento(): string {
   return gerarProtocoloComPrefixo("CANC");
 }
+
+/** Formato: PROP-XXXXXXXX-YYYY — protocolo da proposta comercial. */
+export function gerarProtocoloProposta(): string {
+  return gerarProtocoloComPrefixo("PROP");
+}

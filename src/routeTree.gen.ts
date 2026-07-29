@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SolicitacaoCancelamentoRouteImport } from './routes/solicitacao-cancelamento'
 import { Route as RenovacaoSicafRouteImport } from './routes/renovacao-sicaf'
+import { Route as PropostaRouteImport } from './routes/proposta'
 import { Route as ProcedimentosCadbrasilRouteImport } from './routes/procedimentos-cadbrasil'
 import { Route as ProcedimentoLoginSenhaRouteImport } from './routes/procedimento-login-senha'
 import { Route as InstaladorAssistenteCadbrasilRouteImport } from './routes/instalador-assistente-cadbrasil'
@@ -33,6 +34,11 @@ const SolicitacaoCancelamentoRoute = SolicitacaoCancelamentoRouteImport.update({
 const RenovacaoSicafRoute = RenovacaoSicafRouteImport.update({
   id: '/renovacao-sicaf',
   path: '/renovacao-sicaf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropostaRoute = PropostaRouteImport.update({
+  id: '/proposta',
+  path: '/proposta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProcedimentosCadbrasilRoute = ProcedimentosCadbrasilRouteImport.update({
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
+  '/proposta': typeof PropostaRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
   '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
+  '/proposta': typeof PropostaRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
   '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/instalador-assistente-cadbrasil': typeof InstaladorAssistenteCadbrasilRoute
   '/procedimento-login-senha': typeof ProcedimentoLoginSenhaRoute
   '/procedimentos-cadbrasil': typeof ProcedimentosCadbrasilRoute
+  '/proposta': typeof PropostaRoute
   '/renovacao-sicaf': typeof RenovacaoSicafRoute
   '/solicitacao-cancelamento': typeof SolicitacaoCancelamentoRoute
 }
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/instalador-assistente-cadbrasil'
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
+    | '/proposta'
     | '/renovacao-sicaf'
     | '/solicitacao-cancelamento'
   fileRoutesByTo: FileRoutesByTo
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/instalador-assistente-cadbrasil'
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
+    | '/proposta'
     | '/renovacao-sicaf'
     | '/solicitacao-cancelamento'
   id:
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/instalador-assistente-cadbrasil'
     | '/procedimento-login-senha'
     | '/procedimentos-cadbrasil'
+    | '/proposta'
     | '/renovacao-sicaf'
     | '/solicitacao-cancelamento'
   fileRoutesById: FileRoutesById
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   InstaladorAssistenteCadbrasilRoute: typeof InstaladorAssistenteCadbrasilRoute
   ProcedimentoLoginSenhaRoute: typeof ProcedimentoLoginSenhaRoute
   ProcedimentosCadbrasilRoute: typeof ProcedimentosCadbrasilRoute
+  PropostaRoute: typeof PropostaRoute
   RenovacaoSicafRoute: typeof RenovacaoSicafRoute
   SolicitacaoCancelamentoRoute: typeof SolicitacaoCancelamentoRoute
 }
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/renovacao-sicaf'
       fullPath: '/renovacao-sicaf'
       preLoaderRoute: typeof RenovacaoSicafRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposta': {
+      id: '/proposta'
+      path: '/proposta'
+      fullPath: '/proposta'
+      preLoaderRoute: typeof PropostaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/procedimentos-cadbrasil': {
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   InstaladorAssistenteCadbrasilRoute: InstaladorAssistenteCadbrasilRoute,
   ProcedimentoLoginSenhaRoute: ProcedimentoLoginSenhaRoute,
   ProcedimentosCadbrasilRoute: ProcedimentosCadbrasilRoute,
+  PropostaRoute: PropostaRoute,
   RenovacaoSicafRoute: RenovacaoSicafRoute,
   SolicitacaoCancelamentoRoute: SolicitacaoCancelamentoRoute,
 }

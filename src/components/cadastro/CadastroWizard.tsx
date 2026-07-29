@@ -12,7 +12,6 @@ import {
   Building2,
   UserRound,
   MapPin,
-  ClipboardList,
   FileUp,
   CreditCard,
   CheckCircle2,
@@ -51,7 +50,6 @@ type StepKey =
   | "empresa"
   | "responsavel"
   | "endereco"
-  | "diagnostico"
   | "plano"
   | "acesso"
   | "revisao";
@@ -71,10 +69,9 @@ const ALL_STEPS: StepDef[] = [
   { key: "empresa", num: 1, title: "Identificação da Empresa", short: "Empresa", icon: Building2 },
   { key: "responsavel", num: 2, title: "Responsável Legal", short: "Responsável", icon: UserRound },
   { key: "endereco", num: 3, title: "Endereço Empresarial", short: "Endereço", icon: MapPin },
-  { key: "diagnostico", num: 4, title: "Diagnóstico de Habilitação", short: "Diagnóstico", icon: ClipboardList },
-  { key: "plano", num: 5, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
-  { key: "acesso", num: 6, title: "Acesso ao Portal", short: "Acesso", icon: KeyRound },
-  { key: "revisao", num: 7, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
+  { key: "plano", num: 4, title: "Licença CADBRASIL", short: "Licença CADBRASIL", icon: CreditCard },
+  { key: "acesso", num: 5, title: "Acesso ao Portal", short: "Acesso", icon: KeyRound },
+  { key: "revisao", num: 6, title: "Revisão e Finalização", short: "Revisão", icon: BadgeCheck },
 ];
 
 const STEPS: StepDef[] = (LICENCA_STEP_ENABLED ? ALL_STEPS : ALL_STEPS.filter((s) => s.key !== "plano")).map(
@@ -380,8 +377,6 @@ export function CadastroWizard() {
                         return <StepResponsavel data={data} update={update} />;
                       case "endereco":
                         return <StepEndereco data={data} update={update} />;
-                      case "diagnostico":
-                        return <StepDiagnostico data={data} />;
                       case "plano":
                         return <StepPlano />;
                       case "acesso":
@@ -448,7 +443,6 @@ function stepSubtitle(k: StepKey) {
     case "empresa": return "Informe o CNPJ para consultarmos automaticamente os dados oficiais da Receita Federal.";
     case "responsavel": return "Dados do representante legal responsável pelo credenciamento da empresa.";
     case "endereco": return "Endereço fiscal cadastrado para fins de comunicação oficial e habilitação.";
-    case "diagnostico": return "Pré-análise informativa dos requisitos SICAF. Nenhum documento é enviado nesta etapa.";
     case "plano": return "Plano oficial de habilitação assistida e acesso à plataforma CADBRASIL.";
     case "acesso": return "Crie seu acesso ao Portal do Fornecedor CADBRASIL. Estas credenciais serão usadas para entrar na plataforma.";
     case "revisao": return "Confira os dados antes de protocolar oficialmente o seu credenciamento.";
@@ -1030,68 +1024,6 @@ function StepEndereco({ data, update }: { data: FormState; update: <K extends ke
       <Field label="UF" required className="sm:col-span-2">
         <Input value={data.estado} onChange={(e) => update("estado", e.target.value)} className="h-11 uppercase" maxLength={2} />
       </Field>
-    </div>
-  );
-}
-
-function StepDiagnostico({ data }: { data: FormState }) {
-  const items = [
-    { title: "Regularidade Fiscal", desc: "Certidões federais, estaduais e municipais exigidas para habilitação.", status: "apto" as const, ref: "Lei 14.133/21, art. 68" },
-    { title: "Capacidade Jurídica", desc: "Contrato social e poderes do representante legal.", status: "apto" as const, ref: "Art. 66" },
-    { title: "Qualificação Econômico-Financeira", desc: "Balanço patrimonial e índices contábeis.", status: "pendente" as const, ref: "Art. 69" },
-    { title: "Qualificação Técnica", desc: "Atestados de capacidade técnica e registros profissionais.", status: "correcao" as const, ref: "Art. 67" },
-  ];
-
-  return (
-    <div className="space-y-5">
-      <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-        Pré-análise automática para o CNPJ <strong className="font-medium text-foreground">{data.cnpj || "—"}</strong>.
-        Os cards abaixo são <strong className="font-medium text-foreground">somente informativos</strong> — não é necessário enviar documentos nesta etapa.
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {items.map((it) => (
-          <DiagnosticoCard key={it.title} {...it} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DiagnosticoCard({ title, desc, status, ref }: { title: string; desc: string; status: "apto" | "pendente" | "correcao"; ref: string }) {
-  const map = {
-    apto: { label: "Indicativo favorável", dot: "bg-success", border: "border-success/30", text: "text-success", bg: "bg-success/5" },
-    pendente: { label: "A confirmar no portal", dot: "bg-warning", border: "border-warning/30", text: "text-warning-foreground", bg: "bg-warning/5" },
-    correcao: { label: "A confirmar no portal", dot: "bg-muted-foreground/50", border: "border-border", text: "text-muted-foreground", bg: "bg-muted/30" },
-  }[status];
-  const Icon = status === "apto" ? CheckCircle2 : Info;
-  return (
-    <div className={cn("rounded-lg border p-5", map.border, map.bg)}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-            <Badge variant="secondary" className="text-[10px] font-normal uppercase tracking-wide">
-              Somente leitura
-            </Badge>
-          </div>
-          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{desc}</p>
-        </div>
-        <Badge variant="outline" className={cn("shrink-0 gap-1 text-[11px] font-medium", map.text)}>
-          <span className={cn("h-1.5 w-1.5 rounded-full", map.dot)} />
-          {map.label}
-        </Badge>
-      </div>
-      <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
-        <p className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-          Não é necessário enviar documentos aqui. Após concluir o cadastro, o envio será feito no Portal do Fornecedor.
-        </p>
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground/80">
-          <span>Referência: {ref}</span>
-          <Icon className={cn("h-4 w-4", map.text)} />
-        </div>
-      </div>
     </div>
   );
 }

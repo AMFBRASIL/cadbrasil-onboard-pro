@@ -43,6 +43,7 @@ Resumo das **14 tabelas** referenciadas no código:
 | `taxas_sicaf` | INSERT, SELECT, UPDATE | Taxa/cobrança vinculada ao SICAF |
 | `pagamentos_gerencianet` | INSERT, UPDATE | Cobranças Efí (boleto/PIX) |
 | `tracking_sessoes` | INSERT | Marketing/UTM/conversão |
+| `propostas_comerciais` | INSERT | Proposta de módulos pós-cadastro (`/proposta`) |
 | `configuracoes_sistema` | SELECT | Configurações (valor da taxa) |
 | `templates_email` | SELECT | Templates de e-mail (boas-vindas/licença) |
 
@@ -251,6 +252,24 @@ Marketing/UTM/conversão (gravado pós-commit, não bloqueante).
 | `conversion_at` | DATETIME | `NOW()` |
 | `funnel_step` | VARCHAR | gravado `"signup"` |
 | `last_activity_at` | DATETIME | `NOW()` |
+
+### 3.11a `propostas_comerciais`
+Proposta comercial gerada em `/proposta` após o cadastro (DDL: `docs/sql/propostas_comerciais.sql`).
+
+| Coluna | Tipo (inferido) | Observações |
+|--------|------------------|-------------|
+| `id` | BIGINT PK | |
+| `cliente_id` | BIGINT FK → `clientes.id` | resolvido via `protocolo_cadastro` |
+| `protocolo_cadastro` | VARCHAR | `SICAF-...` do cadastro |
+| `protocolo_proposta` | VARCHAR UNIQUE | `PROP-XXXXXXXX-9999` |
+| `razao_social`,`documento` | VARCHAR NULL | snapshot do cliente |
+| `valor_base`,`valor_extras`,`valor_total` | DECIMAL(12,2) | base = 985; extras = soma dos módulos |
+| `periodicidade` | VARCHAR | `"anual"` |
+| `modulos_base_json`,`modulos_extras_json` | JSON | snapshot id/nome/preço |
+| `status` | VARCHAR | default `"Gerada"` |
+| `observacoes` | TEXT NULL | |
+| `tracking_json` | JSON NULL | UTM no momento da geração |
+| `created_at` / `updated_at` | DATETIME | |
 
 ### 3.12 `configuracoes_sistema`
 Configurações chave/valor (compartilhadas com o portal).

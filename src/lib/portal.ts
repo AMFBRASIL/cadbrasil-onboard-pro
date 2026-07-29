@@ -13,6 +13,22 @@ export function getPortalDocumentosUrl(): string {
   return `${base}/auth`;
 }
 
+/**
+ * Acesso ao portal após gerar proposta comercial.
+ * Query params permitem o portal identificar a proposta em aberto para pagamento.
+ */
+export function getPortalPropostaUrl(opts?: {
+  protocoloProposta?: string;
+  protocoloCadastro?: string;
+}): string {
+  const base = getPortalUrl().replace(/\/$/, "");
+  const params = new URLSearchParams();
+  if (opts?.protocoloProposta) params.set("proposta", opts.protocoloProposta);
+  if (opts?.protocoloCadastro) params.set("protocolo", opts.protocoloCadastro);
+  const qs = params.toString();
+  return qs ? `${base}/auth?${qs}` : `${base}/auth`;
+}
+
 /** Recuperação de senha no Portal do Fornecedor. */
 export function getPortalEsqueciSenhaUrl(): string {
   const base = getPortalUrl().replace(/\/$/, "");
