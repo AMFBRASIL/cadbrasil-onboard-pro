@@ -97,6 +97,7 @@ export function TriagemProcessoSicaf({
   const [guiaGerada, setGuiaGerada] = useState(false);
   const [gerandoGuia, setGerandoGuia] = useState(false);
   const [modalTaxa, setModalTaxa] = useState(false);
+  const [modalRedirect, setModalRedirect] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
 
   const portalHref = getPortalDocumentosUrl();
@@ -142,6 +143,22 @@ export function TriagemProcessoSicaf({
     setGuiaGerada(true);
     setModalTaxa(true);
   }
+
+  function handleEntendiTaxa() {
+    setModalTaxa(false);
+    setModalRedirect(true);
+  }
+
+  useEffect(() => {
+    if (!modalRedirect) return;
+
+    const timer = window.setTimeout(() => {
+      trackPortalClick("cta_principal");
+      window.location.assign(portalHref);
+    }, 2200);
+
+    return () => window.clearTimeout(timer);
+  }, [modalRedirect, portalHref]);
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -472,9 +489,48 @@ export function TriagemProcessoSicaf({
             </div>
             <Button
               className="w-full font-semibold"
-              onClick={() => setModalTaxa(false)}
+              onClick={handleEntendiTaxa}
             >
               Entendi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={modalRedirect} onOpenChange={setModalRedirect}>
+        <DialogContent
+          className="sm:max-w-md"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+            </div>
+            <DialogTitle className="text-center text-xl">
+              Direcionando para o Portal do Fornecedor
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm leading-relaxed">
+              Estamos abrindo a plataforma para você continuar o processo SICAF
+              e visualizar a guia da taxa de{" "}
+              <strong className="text-foreground">{formatTaxaProcesso()}</strong>.
+              Use o login e a senha criados no cadastro.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 space-y-3">
+            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
+              Aguarde alguns segundos… redirecionamento automático.
+            </div>
+            <Button
+              asChild
+              className="w-full font-semibold"
+              onClick={() => trackPortalClick("cta_principal")}
+            >
+              <a href={portalHref}>
+                <LogIn className="h-4 w-4" />
+                Ir agora para o portal
+                <ArrowRight className="h-4 w-4" />
+              </a>
             </Button>
           </div>
         </DialogContent>
