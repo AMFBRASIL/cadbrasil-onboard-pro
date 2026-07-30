@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
-import { TopBar, Header } from "@/components/cadastro/LayoutParts";
+import { TopBar, Header, WhatsAppFloating } from "@/components/cadastro/LayoutParts";
 import { TriagemProcessoSicaf } from "@/components/conclusao/TriagemProcessoSicaf";
 import type { ConsultaProtocoloResult } from "@/lib/cadastro-consulta-types";
 import { consultarCadastroPorProtocolo } from "@/lib/cadastro-consulta";
@@ -127,7 +127,7 @@ function ConclusaoCadastroPage() {
 
   if (notFound || !cadastro) {
     return (
-      <PageShell>
+      <PageShell protocolo={protocoloQuery}>
         <StatusCard
           icon={<AlertCircle className="h-10 w-10 text-destructive" />}
           title="Protocolo não encontrado"
@@ -152,7 +152,7 @@ function ConclusaoCadastroPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell protocolo={cadastro.protocolo}>
       <div className="sr-only" aria-hidden="true">
         <h1>Iniciar Processo de credenciamento SICAF / Comprasnet</h1>
         <p>Protocolo CADBRASIL: {cadastro.protocolo}</p>
@@ -169,12 +169,23 @@ function ConclusaoCadastroPage() {
   );
 }
 
-function PageShell({ children }: { children: ReactNode }) {
+function PageShell({
+  children,
+  protocolo,
+}: {
+  children: ReactNode;
+  protocolo?: string;
+}) {
+  const waMessage = protocolo
+    ? `Olá, estou na página de conclusão do cadastro CADBRASIL (protocolo ${protocolo}) e tenho dúvidas. Preciso de suporte.`
+    : "Olá, estou na página de conclusão do cadastro CADBRASIL e tenho dúvidas. Preciso de suporte.";
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
       <Header />
       <main className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8 lg:py-10">{children}</main>
+      <WhatsAppFloating message={waMessage} />
     </div>
   );
 }

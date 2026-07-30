@@ -70,8 +70,9 @@ function Seal({ icon: Icon, label }: { icon: typeof ShieldCheck; label: string }
   );
 }
 
-const WHATSAPP_URL =
-  "https://wa.me/551121220202?text=Ol%C3%A1%2C+estou+na+p%C3%A1gina+de+cadastro+da+CADBRASIL+e+preciso+de+suporte.";
+const WHATSAPP_NUMBER = "551121220202";
+const WHATSAPP_DEFAULT_MESSAGE =
+  "Olá, estou na página de cadastro da CADBRASIL e preciso de suporte.";
 
 export function InstitutionalFooter() {
   return (
@@ -111,10 +112,15 @@ export function InstitutionalFooter() {
   );
 }
 
-export function WhatsAppFloating() {
+export function WhatsAppFloating({
+  message = WHATSAPP_DEFAULT_MESSAGE,
+}: {
+  message?: string;
+} = {}) {
+  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   return (
     <a
-      href={WHATSAPP_URL}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110 hover:shadow-xl"
