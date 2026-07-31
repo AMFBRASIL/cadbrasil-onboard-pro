@@ -70,9 +70,13 @@ function Seal({ icon: Icon, label }: { icon: typeof ShieldCheck; label: string }
   );
 }
 
-const WHATSAPP_NUMBER = "551121220202";
+export const WHATSAPP_NUMBER = "551121220202";
 const WHATSAPP_DEFAULT_MESSAGE =
   "Olá, estou na página de cadastro da CADBRASIL e preciso de suporte.";
+
+export function buildWhatsAppHref(message: string): string {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
 
 export function InstitutionalFooter() {
   return (
@@ -117,7 +121,7 @@ export function WhatsAppFloating({
 }: {
   message?: string;
 } = {}) {
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const href = buildWhatsAppHref(message);
   return (
     <a
       href={href}
