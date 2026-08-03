@@ -6,13 +6,16 @@ import {
   Building2,
   CheckCircle2,
   Circle,
+  Copy,
   CreditCard,
+  ExternalLink,
   FileText,
   Gauge,
   KeyRound,
   Landmark,
   Loader2,
   LogIn,
+  Mail,
   MessageCircle,
   Scale,
   ShieldCheck,
@@ -25,10 +28,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { solicitarBoleto } from "@/lib/boleto";
+import type { SolicitarBoletoResult } from "@/lib/boleto-types";
 import { getPortalDocumentosUrl } from "@/lib/portal";
 import { trackPortalClick } from "@/lib/tracking";
 import { cn } from "@/lib/utils";
@@ -143,12 +149,33 @@ type Props = {
   protocolo: string;
   razaoSocial?: string;
   emailAcesso?: string;
+  documento?: string;
+  tipoDocumento?: string;
 };
+
+type BoletoOk = Extract<SolicitarBoletoResult, { success: true }>;
+
+function formatVencimento(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function onlyDigits(value: string): string {
+  return value.replace(/\D/g, "");
+}
 
 export function TriagemProcessoSicaf({
   protocolo,
   razaoSocial,
   emailAcesso,
+  documento,
+  tipoDocumento,
 }: Props) {
   const [docs, setDocs] = useState<DocId[]>([]);
   const [certificadoEmDia, setCertificadoEmDia] = useState<
@@ -157,11 +184,15 @@ export function TriagemProcessoSicaf({
   const [guiaGerada, setGuiaGerada] = useState(false);
   const [gerandoGuia, setGerandoGuia] = useState(false);
   const [modalTaxa, setModalTaxa] = useState(false);
-  const [modalRedirect, setModalRedirect] = useState(false);
+  const [boleto, setBoleto] = useState<BoletoOk | null>(null);
+  const [guiaError, setGuiaError] = useState<string | null>(null);
+  const [copiedBarras, setCopiedBarras] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
 
   const portalHref = getPortalDocumentosUrl();
   const docsCount = docs.length;
+  const docsPendentes = DOCUMENTOS_TRIAGEM.filter((d) => !docs.includes(d.id));
+  const docsProntos = DOCUMENTOS_TRIAGEM.filter((d) => docs.includes(d.id));
 
   const qualityScore = useMemo(() => {
     let score = docs.length * DOC_POINTS;
@@ -173,9 +204,20 @@ export function TriagemProcessoSicaf({
 
   const level = qualityLevel(qualityScore);
 
+  const processStepsDone =
+    (docsCount > 0 ? 1 : 0) +
+    (certificadoEmDia ? 1 : 0) +
+    (guiaGerada ? 1 : 0);
+  const processStepsTotal = 4;
+  const processPct = Math.round((processStepsDone / processStepsTotal) * 100);
+
   const ajudaHref = buildWhatsAppHref(
     `Olá, estou na página de conclusão do cadastro CADBRASIL (protocolo ${protocolo}) e estou com dificuldade no processo SICAF / Comprasnet. Preciso saber como fazer o processo. Podem me ajudar?`,
   );
+
+  const cnpjDigits = onlyDigits(documento ?? "");
+  const podeGerarBoleto =
+    (tipoDocumento ?? "CNPJ").toUpperCase() !== "CPF" && cnpjDigits.length === 14;
 
   useEffect(() => {
     function updateScrollHint() {
@@ -211,28 +253,49 @@ export function TriagemProcessoSicaf({
   }
 
   async function handleGerarGuia() {
+    setGuiaError(null);
+    setCopiedBarras(false);
+
+    if (guiaGerada && boleto) {
+      setModalTaxa(true);
+      return;
+    }
+
+    if (!podeGerarBoleto) {
+      setGuiaError(
+        "Não foi possível identificar um CNPJ válido para gerar a guia. Fale com o suporte.",
+      );
+      return;
+    }
+
     setGerandoGuia(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setGerandoGuia(false);
-    setGuiaGerada(true);
-    setModalTaxa(true);
+    try {
+      const res = await solicitarBoleto({ data: { cnpj: cnpjDigits } });
+      if (!res.success) {
+        setGuiaError(res.error);
+        return;
+      }
+      setBoleto(res);
+      setGuiaGerada(true);
+      setModalTaxa(true);
+    } catch (err) {
+      console.error("[handleGerarGuia]", err);
+      setGuiaError("Erro ao gerar a guia. Tente novamente em instantes.");
+    } finally {
+      setGerandoGuia(false);
+    }
   }
 
-  function handleEntendiTaxa() {
-    setModalTaxa(false);
-    setModalRedirect(true);
+  async function copyCodigoBarras() {
+    if (!boleto?.codigoBarras) return;
+    try {
+      await navigator.clipboard.writeText(boleto.codigoBarras);
+      setCopiedBarras(true);
+      window.setTimeout(() => setCopiedBarras(false), 2000);
+    } catch {
+      setCopiedBarras(false);
+    }
   }
-
-  useEffect(() => {
-    if (!modalRedirect) return;
-
-    const timer = window.setTimeout(() => {
-      trackPortalClick("cta_principal");
-      window.location.assign(portalHref);
-    }, 2200);
-
-    return () => window.clearTimeout(timer);
-  }, [modalRedirect, portalHref]);
 
   return (
     <>
@@ -464,39 +527,45 @@ export function TriagemProcessoSicaf({
               </div>
             </div>
 
-            <Button
-              type="button"
-              size="lg"
-              disabled={gerandoGuia}
-              onClick={() => void handleGerarGuia()}
-              className="h-14 shrink-0 px-8 font-bold sm:min-w-[200px]"
-            >
-              {gerandoGuia ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Gerando…
-                </>
-              ) : guiaGerada ? (
-                <>
-                  <FileText className="h-5 w-5" />
-                  Guia gerada
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-5 w-5" />
-                  Gerar guia de pagamento
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            size="lg"
+            disabled={gerandoGuia}
+            onClick={() => void handleGerarGuia()}
+            className="h-14 shrink-0 px-8 font-bold sm:min-w-[200px]"
+          >
+            {gerandoGuia ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Gerando…
+              </>
+            ) : guiaGerada ? (
+              <>
+                <FileText className="h-5 w-5" />
+                Ver detalhes da guia
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-5 w-5" />
+                Gerar guia de pagamento
+              </>
+            )}
+          </Button>
+        </div>
 
-          {guiaGerada ? (
-            <p className="mt-4 flex items-center gap-2 text-sm font-medium text-success">
-              <CheckCircle2 className="h-4 w-4" />
-              Guia liberada dentro da sua plataforma do fornecedor.
-            </p>
-          ) : null}
-        </section>
+        {guiaError ? (
+          <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {guiaError}
+          </p>
+        ) : null}
+
+        {guiaGerada ? (
+          <p className="mt-4 flex items-center gap-2 text-sm font-medium text-success">
+            <CheckCircle2 className="h-4 w-4" />
+            Guia gerada. Abra os detalhes para pagar e acompanhar o processo.
+          </p>
+        ) : null}
+      </section>
 
         {/* 4. Acesso */}
         <section
@@ -664,72 +733,259 @@ export function TriagemProcessoSicaf({
       </div>
 
       <Dialog open={modalTaxa} onOpenChange={setModalTaxa}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
-              <CheckCircle2 className="h-7 w-7 text-success" />
-            </div>
-            <DialogTitle className="text-center text-xl">
-              Taxa liberada na sua plataforma
-            </DialogTitle>
-            <DialogDescription className="text-center text-sm leading-relaxed">
-              A guia da taxa única anual de{" "}
-              <strong className="text-foreground">{formatTaxaProcesso()}</strong>{" "}
-              foi liberada dentro do Portal do Fornecedor. Acesse o sistema com
-              seu login e senha para visualizar e pagar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-2 space-y-3">
-            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-center text-sm">
-              <p className="text-muted-foreground">Protocolo</p>
-              <p className="font-mono font-bold text-foreground">{protocolo}</p>
-            </div>
-            <Button
-              className="w-full font-semibold"
-              onClick={handleEntendiTaxa}
-            >
-              Entendi
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={modalRedirect} onOpenChange={setModalRedirect}>
         <DialogContent
-          className="sm:max-w-md"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
+          className={cn(
+            "flex w-[calc(100%-1rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0",
+            "max-h-[min(92vh,880px)] sm:rounded-2xl",
+          )}
         >
-          <DialogHeader>
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+          <DialogHeader className="shrink-0 space-y-0 border-b border-border px-5 py-4 pr-12 text-left sm:px-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-6 w-6 text-success" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-lg leading-tight sm:text-xl">
+                  Processo SICAF — guia liberada
+                </DialogTitle>
+                <DialogDescription className="mt-1 line-clamp-2 text-sm leading-snug">
+                  {boleto?.message ||
+                    "Confira o valor, o andamento e os documentos para concluir o credenciamento."}
+                </DialogDescription>
+              </div>
             </div>
-            <DialogTitle className="text-center text-xl">
-              Direcionando para o Portal do Fornecedor
-            </DialogTitle>
-            <DialogDescription className="text-center text-sm leading-relaxed">
-              Estamos abrindo a plataforma para você continuar o processo SICAF
-              e visualizar a guia da taxa de{" "}
-              <strong className="text-foreground">{formatTaxaProcesso()}</strong>.
-              Use o login e a senha criados no cadastro.
-            </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 space-y-3">
-            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
-              Aguarde alguns segundos… redirecionamento automático.
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
+              {/* Coluna esquerda: valor + protocolos + andamento */}
+              <div className="space-y-4 lg:col-span-5">
+                <div className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        Taxa única anual
+                      </p>
+                      <p className="mt-1 text-3xl font-black tracking-tight text-foreground">
+                        {boleto?.valorFormatado ?? formatTaxaProcesso()}
+                      </p>
+                    </div>
+                    {boleto?.dataVencimento ? (
+                      <p className="rounded-lg bg-background/80 px-3 py-1.5 text-xs text-muted-foreground">
+                        Venc.{" "}
+                        <strong className="text-foreground">
+                          {formatVencimento(boleto.dataVencimento)}
+                        </strong>
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="mt-3 border-t border-border/70 pt-3 text-sm">
+                    <p>
+                      <span className="text-muted-foreground">Cadastro · </span>
+                      <span className="font-mono font-bold text-foreground">
+                        {protocolo}
+                      </span>
+                    </p>
+                    {boleto?.protocoloSicaf ? (
+                      <p className="mt-1">
+                        <span className="text-muted-foreground">SICAF · </span>
+                        <span className="font-mono font-bold text-foreground">
+                          {boleto.protocoloSicaf}
+                        </span>
+                      </p>
+                    ) : null}
+                    {(boleto?.razaoSocial || razaoSocial) && (
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                        {boleto?.razaoSocial || razaoSocial}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-teal-600/20 bg-teal-50/60 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-800/80">
+                      <Gauge className="h-3.5 w-3.5" />
+                      Andamento
+                    </div>
+                    <span className="text-sm font-bold text-teal-900">
+                      {processPct}% · {level.label}
+                    </span>
+                  </div>
+                  <Progress value={processPct} className="mt-2.5 h-2" />
+                  <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs sm:text-sm">
+                    <li className="flex items-center gap-1.5">
+                      {docsCount > 0 ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                      )}
+                      Docs {docsCount}/{DOCUMENTOS_TRIAGEM.length}
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      {certificadoEmDia ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                      )}
+                      {certificadoEmDia === "sim"
+                        ? "Cert. válido"
+                        : certificadoEmDia === "nao"
+                          ? "Cert. pendente"
+                          : "Certificado"}
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                      Guia
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                      Análise final
+                    </li>
+                  </ul>
+                </div>
+
+                {boleto?.codigoBarras ? (
+                  <div className="rounded-xl border border-border bg-muted/20 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        Código de barras
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => void copyCodigoBarras()}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        {copiedBarras ? "Copiado!" : "Copiar"}
+                      </Button>
+                    </div>
+                    <p className="mt-1.5 break-all font-mono text-[11px] leading-relaxed text-foreground">
+                      {boleto.codigoBarras}
+                    </p>
+                  </div>
+                ) : null}
+
+                {boleto?.emailEnviado && boleto.emailPara ? (
+                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      E-mail enviado para{" "}
+                      <strong className="text-foreground">
+                        {boleto.emailPara}
+                      </strong>
+                    </span>
+                  </p>
+                ) : null}
+              </div>
+
+              {/* Coluna direita: documentos */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-2">
+                <div className="rounded-xl border border-border p-4">
+                  <p className="text-sm font-bold text-foreground">
+                    Documentos em mãos
+                  </p>
+                  <ul className="mt-3 grid gap-1.5 text-sm">
+                    {docsProntos.length === 0 ? (
+                      <li className="text-muted-foreground">
+                        Nenhum documento marcado ainda.
+                      </li>
+                    ) : (
+                      docsProntos.map((doc) => (
+                        <li key={doc.id} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                          <span className="leading-snug">{doc.shortLabel}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-orange-500/25 bg-orange-50/50 p-4">
+                  <p className="text-sm font-bold text-foreground">
+                    Precisa enviar / providenciar
+                  </p>
+                  <ul className="mt-3 grid gap-2 text-sm">
+                    {docsPendentes.length === 0 ? (
+                      <li className="flex items-start gap-2 text-success">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                        Documentação básica completa na triagem.
+                      </li>
+                    ) : (
+                      docsPendentes.map((doc) => (
+                        <li key={doc.id} className="flex items-start gap-2">
+                          <Circle className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
+                          <span className="leading-snug">
+                            <span className="font-medium">{doc.shortLabel}</span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                              {doc.hint}
+                            </span>
+                          </span>
+                        </li>
+                      ))
+                    )}
+                    {certificadoEmDia !== "sim" ? (
+                      <li className="flex items-start gap-2">
+                        <Circle className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
+                        <span className="leading-snug">
+                          <span className="font-medium">
+                            Certificado digital e-CNPJ
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {certificadoEmDia === "nao"
+                              ? "Pendente/vencido — emissão assistida disponível."
+                              : "Ainda não informado na triagem."}
+                          </span>
+                        </span>
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+              </div>
             </div>
-            <Button
-              asChild
-              className="w-full font-semibold"
-              onClick={() => trackPortalClick("cta_principal")}
-            >
-              <a href={portalHref}>
-                <LogIn className="h-4 w-4" />
-                Ir agora para o portal
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </Button>
           </div>
+
+          <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-0 sm:px-6">
+            <Button
+              type="button"
+              variant="ghost"
+              className="order-3 w-full sm:order-1 sm:w-auto"
+              onClick={() => setModalTaxa(false)}
+            >
+              Continuar na triagem
+            </Button>
+            <div className="order-1 flex w-full flex-col gap-2 sm:order-2 sm:w-auto sm:flex-row">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-12 w-full font-semibold sm:w-auto"
+                onClick={() => trackPortalClick("cta_principal")}
+              >
+                <a href={portalHref} target="_blank" rel="noopener noreferrer">
+                  <LogIn className="h-4 w-4" />
+                  Portal
+                </a>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                className="h-12 w-full text-base font-bold shadow-md shadow-primary/20 sm:min-w-[220px]"
+                onClick={() => trackPortalClick("cta_principal")}
+              >
+                <a
+                  href={boleto?.urlPagamento ?? portalHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  Acessar minha Guia
+                  <ArrowRight className="h-5 w-5" />
+                </a>
+              </Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

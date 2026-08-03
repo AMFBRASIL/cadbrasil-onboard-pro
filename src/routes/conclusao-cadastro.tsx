@@ -164,6 +164,8 @@ function ConclusaoCadastroPage() {
         protocolo={cadastro.protocolo}
         razaoSocial={cadastro.cliente.razaoSocial}
         emailAcesso={cadastro.usuario.emailAcesso}
+        documento={cadastro.cliente.documento}
+        tipoDocumento={cadastro.cliente.tipoDocumento}
       />
     </PageShell>
   );
