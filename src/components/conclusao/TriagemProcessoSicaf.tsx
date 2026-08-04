@@ -35,18 +35,15 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { solicitarBoleto } from "@/lib/boleto";
 import type { SolicitarBoletoResult } from "@/lib/boleto-types";
+import { formatTaxaProcessoAnual, getTaxaProcessoAnual } from "@/lib/precos";
 import { getPortalDocumentosUrl } from "@/lib/portal";
 import { trackPortalClick } from "@/lib/tracking";
 import { cn } from "@/lib/utils";
 
-export const TAXA_PROCESSO_ANUAL = 985.5;
+export const TAXA_PROCESSO_ANUAL = getTaxaProcessoAnual();
 
 export function formatTaxaProcesso(): string {
-  return TAXA_PROCESSO_ANUAL.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  });
+  return formatTaxaProcessoAnual();
 }
 
 const DOCUMENTOS_TRIAGEM = [
@@ -767,7 +764,7 @@ export function TriagemProcessoSicaf({
                         Taxa única anual
                       </p>
                       <p className="mt-1 text-3xl font-black tracking-tight text-foreground">
-                        {boleto?.valorFormatado ?? formatTaxaProcesso()}
+                        {formatTaxaProcesso()}
                       </p>
                     </div>
                     {boleto?.dataVencimento ? (

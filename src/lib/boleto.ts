@@ -3,6 +3,7 @@ import type {
   BoletoApiResponse,
   SolicitarBoletoResult,
 } from "./boleto-types";
+import { formatValorBrl, getTaxaProcessoAnual } from "./precos";
 
 const DEFAULT_BOLETO_API_URL =
   "https://fornecedor.cadbrasil.com.br/api/clients/solicitar-boleto";
@@ -94,22 +95,14 @@ async function executarSolicitarBoleto(
       };
     }
 
-    const valor =
-      typeof data.valor === "number" && Number.isFinite(data.valor)
-        ? data.valor
-        : 985.5;
+    // Valor de exibição segue o .env (não o retorno antigo da API do portal).
+    const valor = getTaxaProcessoAnual();
 
     return {
       success: true,
       urlPagamento,
       valor,
-      valorFormatado:
-        data.valorFormatado?.trim() ||
-        valor.toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-          minimumFractionDigits: 2,
-        }),
+      valorFormatado: formatValorBrl(valor),
       protocoloSicaf: data.protocolo?.trim() || null,
       codigoBarras: data.codigoBarras?.trim() || null,
       dataVencimento: data.dataVencimento || null,

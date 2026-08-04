@@ -7,12 +7,12 @@ import {
   WhatsAppFloating,
 } from "@/components/cadastro/LayoutParts";
 import { PropostaConfigurador } from "@/components/proposta/PropostaConfigurador";
+import { formatValorBrl, getPropostaBaseAnual } from "@/lib/precos";
 import { buildSeoHead } from "@/lib/seo";
 
 const PATH = "/proposta";
 const TITLE = "Monte sua proposta CADBRASIL — módulos e investimento anual";
-const DESCRIPTION =
-  "Configure sua proposta CADBRASIL: pacote padrão SICAF + gestores por R$ 985,50/ano e módulos opcionais de licitações, IA, contratos e análise completa.";
+const DESCRIPTION = `Configure sua proposta CADBRASIL: pacote padrão SICAF + gestores por ${formatValorBrl(getPropostaBaseAnual())}/ano e módulos opcionais de licitações, IA, contratos e análise completa.`;
 
 export const Route = createFileRoute("/proposta")({
   validateSearch: (search: Record<string, unknown>) => ({

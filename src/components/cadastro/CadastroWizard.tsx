@@ -44,6 +44,7 @@ import { criarCadastro } from "@/lib/cadastro";
 import { gerarSenhaForte } from "@/lib/senha";
 import { getTrackingForPayload, trackConversion } from "@/lib/tracking";
 import { GTM_EVENTS } from "@/lib/gtm";
+import { formatValorBrl, getPropostaBaseAnual } from "@/lib/precos";
 import type { CnaeItem } from "@/lib/cnae";
 
 type StepKey =
@@ -62,7 +63,7 @@ interface StepDef {
   icon: typeof Building2;
 }
 
-/** Etapa de Licença CADBRASIL (R$ 985,50) — desativada temporariamente no fluxo. */
+/** Etapa de Licença CADBRASIL — desativada temporariamente no fluxo. */
 const LICENCA_STEP_ENABLED = false;
 
 const ALL_STEPS: StepDef[] = [
@@ -315,7 +316,7 @@ export function CadastroWizard() {
         setSubmitError(res.error);
         return;
       }
-      trackConversion(GTM_EVENTS.CADASTRO_CONCLUIDO, 985.5, { protocolo: res.protocolo });
+      trackConversion(GTM_EVENTS.CADASTRO_CONCLUIDO, getPropostaBaseAnual(), { protocolo: res.protocolo });
       await navigate({ to: "/conclusao-cadastro", search: { protocolo: res.protocolo } });
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err ?? "");
@@ -1148,7 +1149,7 @@ function StepPlano() {
           Acesso completo à plataforma oficial e suporte operacional contínuo para participação em licitações públicas em todo o território nacional.
         </p>
         <div className="mt-6 flex items-end gap-2">
-          <span className="text-4xl font-bold">R$ 985,50</span>
+          <span className="text-4xl font-bold">{formatValorBrl(getPropostaBaseAnual())}</span>
           <span className="pb-1 text-sm opacity-80">/ vigência anual</span>
         </div>
         <div className="mt-4 rounded-md bg-white/10 px-3 py-2 text-xs">
@@ -1420,7 +1421,7 @@ function StepRevisao({ data, update }: { data: FormState; update: <K extends key
       </ReviewBlock>
       {LICENCA_STEP_ENABLED && (
         <ReviewBlock title="Licença CADBRASIL">
-          <ReviewItem k="Licença Anual CADBRASIL" v="R$ 985,50" />
+          <ReviewItem k="Licença Anual CADBRASIL" v={formatValorBrl(getPropostaBaseAnual())} />
         </ReviewBlock>
       )}
 
