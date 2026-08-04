@@ -263,7 +263,7 @@ Proposta comercial gerada em `/proposta` após o cadastro (DDL: `docs/sql/propos
 | `protocolo_cadastro` | VARCHAR | `SICAF-...` do cadastro |
 | `protocolo_proposta` | VARCHAR UNIQUE | `PROP-XXXXXXXX-9999` |
 | `razao_social`,`documento` | VARCHAR NULL | snapshot do cliente |
-| `valor_base`,`valor_extras`,`valor_total` | DECIMAL(12,2) | base = 985; extras = soma dos módulos |
+| `valor_base`,`valor_extras`,`valor_total` | DECIMAL(12,2) | base = 985,50; extras = soma dos módulos |
 | `periodicidade` | VARCHAR | `"anual"` |
 | `modulos_base_json`,`modulos_extras_json` | JSON | snapshot id/nome/preço |
 | `status` | VARCHAR | default `"Gerada"` |

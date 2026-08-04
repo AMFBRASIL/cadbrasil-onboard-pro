@@ -12,7 +12,7 @@ import { buildSeoHead } from "@/lib/seo";
 const PATH = "/proposta";
 const TITLE = "Monte sua proposta CADBRASIL — módulos e investimento anual";
 const DESCRIPTION =
-  "Configure sua proposta CADBRASIL: pacote padrão SICAF + gestores por R$ 985/ano e módulos opcionais de licitações, IA, contratos e análise completa.";
+  "Configure sua proposta CADBRASIL: pacote padrão SICAF + gestores por R$ 985,50/ano e módulos opcionais de licitações, IA, contratos e análise completa.";
 
 export const Route = createFileRoute("/proposta")({
   validateSearch: (search: Record<string, unknown>) => ({

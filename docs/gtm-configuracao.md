@@ -32,7 +32,7 @@ O código do site já envia eventos ao `dataLayer`. No [Google Tag Manager](http
 - **Tipo:** Google Ads Conversion Tracking
 - **Conversion ID:** AW-16460586067
 - **Trigger:** CE - cadastro_concluido
-- **Conversion value:** usar variável `conversionValue` (985)
+- **Conversion value:** usar variável `conversionValue` (985.5)
 
 ### Google Ads — Reforço conclusão
 - **Trigger:** CE - conclusao_cadastro_confirmada

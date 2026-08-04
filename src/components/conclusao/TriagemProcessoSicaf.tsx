@@ -39,7 +39,7 @@ import { getPortalDocumentosUrl } from "@/lib/portal";
 import { trackPortalClick } from "@/lib/tracking";
 import { cn } from "@/lib/utils";
 
-export const TAXA_PROCESSO_ANUAL = 476.5;
+export const TAXA_PROCESSO_ANUAL = 985.5;
 
 export function formatTaxaProcesso(): string {
   return TAXA_PROCESSO_ANUAL.toLocaleString("pt-BR", {

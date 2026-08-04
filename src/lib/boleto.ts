@@ -97,7 +97,7 @@ async function executarSolicitarBoleto(
     const valor =
       typeof data.valor === "number" && Number.isFinite(data.valor)
         ? data.valor
-        : 476.5;
+        : 985.5;
 
     return {
       success: true,

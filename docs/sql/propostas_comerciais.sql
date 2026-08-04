@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS propostas_comerciais (
   protocolo_proposta VARCHAR(40) NOT NULL,
   razao_social VARCHAR(160) NULL,
   documento VARCHAR(32) NULL,
-  valor_base DECIMAL(12,2) NOT NULL DEFAULT 985.00,
+  valor_base DECIMAL(12,2) NOT NULL DEFAULT 985.50,
   valor_extras DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   valor_total DECIMAL(12,2) NOT NULL,
   periodicidade VARCHAR(20) NOT NULL DEFAULT 'anual',

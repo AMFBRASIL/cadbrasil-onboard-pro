@@ -754,7 +754,7 @@ export function trackConclusaoCadastroView(params: {
   });
 
   // Reforço de conversão para GTM/Ads (cadastro_concluido já dispara no wizard).
-  trackConversion(GTM_EVENTS.CONCLUSAO_CONFIRMADA, 985, {
+  trackConversion(GTM_EVENTS.CONCLUSAO_CONFIRMADA, 985.5, {
     protocolo: params.protocolo,
     transaction_id: params.protocolo,
   });

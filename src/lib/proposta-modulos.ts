@@ -1,6 +1,6 @@
 /** Módulos da proposta comercial CADBRASIL (valores anuais em R$). */
 
-export const PROPOSTA_BASE_ANUAL = 985;
+export const PROPOSTA_BASE_ANUAL = 985.5;
 
 export type PropostaModulo = {
   id: string;
@@ -13,7 +13,7 @@ export type PropostaModulo = {
   beneficios: string[];
 };
 
-/** Pacote padrão: SICAF + Gestor de certidões + Gestor de editais = R$ 985/ano */
+/** Pacote padrão: SICAF + Gestor de certidões + Gestor de editais = R$ 985,50/ano */
 export const PROPOSTA_MODULOS_BASE: PropostaModulo[] = [
   {
     id: "sicaf",
@@ -30,7 +30,7 @@ export const PROPOSTA_MODULOS_BASE: PropostaModulo[] = [
     beneficios: [
       "Acesso ao Compras.gov.br e PNCP",
       "Assessoria humana no processo",
-      "Incluso no pacote de R$ 985/ano",
+      "Incluso no pacote de R$ 985,50/ano",
     ],
   },
   {
@@ -48,7 +48,7 @@ export const PROPOSTA_MODULOS_BASE: PropostaModulo[] = [
     beneficios: [
       "Menos risco de inabilitação",
       "Alertas de vencimento",
-      "Incluso no pacote de R$ 985/ano",
+      "Incluso no pacote de R$ 985,50/ano",
     ],
   },
   {
@@ -66,7 +66,7 @@ export const PROPOSTA_MODULOS_BASE: PropostaModulo[] = [
     beneficios: [
       "Editais alinhados ao seu perfil",
       "Visão clara de prazos",
-      "Incluso no pacote de R$ 985/ano",
+      "Incluso no pacote de R$ 985,50/ano",
     ],
   },
 ];
