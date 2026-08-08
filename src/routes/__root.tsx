@@ -18,6 +18,7 @@ import {
   GOOGLE_ADS_ID,
   GOOGLE_TAG_ID,
   GTM_CONTAINER_ID,
+  OPENAI_PIXEL_ID,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_URL,
@@ -180,6 +181,13 @@ n=d.createElement(t),n.src=r,n.async=1,n.onload=n.onreadystatechange=function(){
 var s=this.readyState;s&&s!=="loaded"&&s!=="complete"||(f(),n.onload=n.onreadystatechange=null);},
 i=d.getElementsByTagName(t)[0],i.parentNode.insertBefore(n,i);
 })(window,document,"script","https://bat.bing.net/bat.js?ti=${BING_UET_ID}","uetq");`,
+        }}
+      />
+
+      {/* OpenAI Ads pixel */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");oaiq("init",{pixelId:"${OPENAI_PIXEL_ID}",debug:false});`,
         }}
       />
     </>

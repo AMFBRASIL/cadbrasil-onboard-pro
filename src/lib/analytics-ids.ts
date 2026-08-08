@@ -3,6 +3,8 @@ export const GTM_CONTAINER_ID = "GTM-TRVTMS6M";
 export const GOOGLE_ADS_ID = "AW-16460586067";
 export const GOOGLE_TAG_ID = "GT-KTPDP2TV";
 export const BING_UET_ID = "343231769";
+/** Pixel OpenAI Ads (conversão na conclusão do cadastro). */
+export const OPENAI_PIXEL_ID = "3pStK8j8W9ExXyXqfVeJRU";
 
 export const SITE_URL = "https://cadastro.cadbrasil.com.br";
 export const SITE_NAME = "CADBRASIL";

@@ -38,6 +38,8 @@ declare global {
     dataLayer?: Record<string, unknown>[];
     /** Fila UET (array antes do bat.js carregar; objeto UET com .push depois). */
     uetq?: { push: (...args: unknown[]) => void };
+    /** OpenAI Ads pixel queue / SDK. */
+    oaiq?: ((...args: unknown[]) => void) & { q?: unknown[] };
   }
 }
 
@@ -759,6 +761,21 @@ export function trackConclusaoCadastroView(params: {
     protocolo: params.protocolo,
     transaction_id: params.protocolo,
   });
+
+  trackOpenAiRegistrationCompleted();
+}
+
+/** Conversão OpenAI Ads na conclusão do cadastro. */
+export function trackOpenAiRegistrationCompleted(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (typeof window.oaiq !== "function") return;
+    window.oaiq("measure", "registration_completed", {
+      type: "customer_action",
+    });
+  } catch (e) {
+    console.warn("[Tracking] OpenAI oaiq:", e);
+  }
 }
 
 export function trackPortalClick(origem: "cta_principal" | "cta_secundario" | "link_texto"): void {
